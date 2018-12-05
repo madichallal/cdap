@@ -30,7 +30,7 @@ public interface ArtifactManager {
   /**
    * Get the list of artifacts in the repository in the current and system namespace
    *
-   * @return {@link List<ArtifactInfo>} list of artifact info
+   * @return list of artifact info
    * @throws IOException when there is an error retrieving artifacts
    */
   List<ArtifactInfo> listArtifacts() throws IOException;
@@ -38,7 +38,8 @@ public interface ArtifactManager {
   /**
    * Get the list of artifacts in the repository in the specified namespace and system namespace
    *
-   * @return {@link List<ArtifactInfo>} list of artifact info
+   * @param namespace the namespace to list artifacts for
+   * @return list of artifact info
    * @throws IOException when there is an error retrieving artifacts
    */
   List<ArtifactInfo> listArtifacts(String namespace) throws IOException;

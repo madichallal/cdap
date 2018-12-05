@@ -36,7 +36,7 @@ import co.cask.cdap.common.conf.CConfiguration;
 import co.cask.cdap.common.lang.InstantiatorFactory;
 import co.cask.cdap.common.lang.PropertyFieldSetter;
 import co.cask.cdap.common.logging.LoggingContext;
-import co.cask.cdap.common.namespace.NamespaceAdmin;
+import co.cask.cdap.common.namespace.NamespaceQueryAdmin;
 import co.cask.cdap.data2.dataset2.DatasetFramework;
 import co.cask.cdap.data2.metadata.writer.MetadataPublisher;
 import co.cask.cdap.data2.transaction.Transactions;
@@ -74,7 +74,7 @@ public class ServiceHttpServer extends AbstractServiceHttpServer<HttpServiceHand
   private final CConfiguration cConf;
   private final AtomicInteger instanceCount;
   private final BasicHttpServiceContextFactory contextFactory;
-  private final NamespaceAdmin namespaceAdmin;
+  private final NamespaceQueryAdmin namespaceQueryAdmin;
 
   public ServiceHttpServer(String host, Program program, ProgramOptions programOptions,
                            CConfiguration cConf, ServiceSpecification spec,
@@ -85,7 +85,7 @@ public class ServiceHttpServer extends AbstractServiceHttpServer<HttpServiceHand
                            SecureStore secureStore, SecureStoreManager secureStoreManager,
                            MessagingService messagingService,
                            ArtifactManager artifactManager, MetadataReader metadataReader,
-                           MetadataPublisher metadataPublisher, NamespaceAdmin namespaceAdmin) {
+                           MetadataPublisher metadataPublisher, NamespaceQueryAdmin namespaceQueryAdmin) {
     super(host, program, programOptions, instanceId, serviceAnnouncer, TransactionControl.IMPLICIT);
 
     this.cConf = cConf;
@@ -96,7 +96,7 @@ public class ServiceHttpServer extends AbstractServiceHttpServer<HttpServiceHand
                                                txClient, pluginInstantiator, secureStore, secureStoreManager,
                                                messagingService, artifactManager, metadataReader, metadataPublisher);
     this.context = contextFactory.create(null);
-    this.namespaceAdmin = namespaceAdmin;
+    this.namespaceQueryAdmin = namespaceQueryAdmin;
   }
 
   @Override
@@ -152,7 +152,7 @@ public class ServiceHttpServer extends AbstractServiceHttpServer<HttpServiceHand
                                                metricsCollectionService, datasetFramework, discoveryServiceClient,
                                                txClient, pluginInstantiator, secureStore, secureStoreManager,
                                                messagingService, artifactManager, metadataReader, metadataPublisher,
-                                               namespaceAdmin);
+                                               namespaceQueryAdmin);
   }
 
   /**

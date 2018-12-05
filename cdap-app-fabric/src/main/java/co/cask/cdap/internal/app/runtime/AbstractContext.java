@@ -65,7 +65,7 @@ import co.cask.cdap.common.conf.Constants;
 import co.cask.cdap.common.lang.ClassLoaders;
 import co.cask.cdap.common.lang.CombineClassLoader;
 import co.cask.cdap.common.metrics.NoOpMetricsCollectionService;
-import co.cask.cdap.common.namespace.NamespaceAdmin;
+import co.cask.cdap.common.namespace.NamespaceQueryAdmin;
 import co.cask.cdap.common.service.Retries;
 import co.cask.cdap.common.service.RetryStrategy;
 import co.cask.cdap.data.LineageDatasetContext;
@@ -179,7 +179,7 @@ public abstract class AbstractContext extends AbstractServiceDiscoverer
                             MessagingService messagingService,
                             @Nullable PluginInstantiator pluginInstantiator,
                             MetadataReader metadataReader, MetadataPublisher metadataPublisher,
-                            NamespaceAdmin namespaceAdmin) {
+                            NamespaceQueryAdmin namespaceQueryAdmin) {
     super(program.getId());
 
     this.artifactId = ProgramRunners.getArtifactId(programOptions);
@@ -229,7 +229,7 @@ public abstract class AbstractContext extends AbstractServiceDiscoverer
     KerberosPrincipalId principalId = ProgramRunners.getApplicationPrincipal(programOptions);
     this.admin = new DefaultAdmin(dsFramework, program.getId().getNamespaceId(), secureStoreManager,
                                   new BasicMessagingAdmin(messagingService, program.getId().getNamespaceId()),
-                                  retryStrategy, principalId, namespaceAdmin);
+                                  retryStrategy, principalId, namespaceQueryAdmin);
     this.secureStore = secureStore;
     this.defaultTxTimeout = determineTransactionTimeout(cConf);
     this.transactional = Transactions.createTransactional(getDatasetCache(), defaultTxTimeout);

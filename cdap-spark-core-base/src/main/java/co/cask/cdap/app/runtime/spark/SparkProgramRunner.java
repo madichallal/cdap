@@ -36,7 +36,7 @@ import co.cask.cdap.common.conf.CConfiguration;
 import co.cask.cdap.common.conf.Constants;
 import co.cask.cdap.common.lang.FilterClassLoader;
 import co.cask.cdap.common.lang.InstantiatorFactory;
-import co.cask.cdap.common.namespace.NamespaceAdmin;
+import co.cask.cdap.common.namespace.NamespaceQueryAdmin;
 import co.cask.cdap.data.ProgramContextAware;
 import co.cask.cdap.data2.dataset2.DatasetFramework;
 import co.cask.cdap.data2.metadata.writer.FieldLineageWriter;
@@ -109,7 +109,7 @@ public final class SparkProgramRunner extends AbstractProgramRunnerWithPlugin
   private final MetadataReader metadataReader;
   private final FieldLineageWriter fieldLineageWriter;
   private final MetadataPublisher metadataPublisher;
-  private final NamespaceAdmin namespaceAdmin;
+  private final NamespaceQueryAdmin namespaceQueryAdmin;
 
   @Inject
   SparkProgramRunner(CConfiguration cConf, Configuration hConf, LocationFactory locationFactory,
@@ -120,7 +120,7 @@ public final class SparkProgramRunner extends AbstractProgramRunnerWithPlugin
                      AuthorizationEnforcer authorizationEnforcer, AuthenticationContext authenticationContext,
                      MessagingService messagingService, ServiceAnnouncer serviceAnnouncer,
                      PluginFinder pluginFinder, MetadataReader metadataReader, MetadataPublisher metadataPublisher,
-                     FieldLineageWriter fieldLineageWriter, NamespaceAdmin namespaceAdmin) {
+                     FieldLineageWriter fieldLineageWriter, NamespaceQueryAdmin namespaceQueryAdmin) {
     super(cConf);
     this.cConf = cConf;
     this.hConf = hConf;
@@ -140,7 +140,7 @@ public final class SparkProgramRunner extends AbstractProgramRunnerWithPlugin
     this.metadataReader = metadataReader;
     this.fieldLineageWriter = fieldLineageWriter;
     this.metadataPublisher = metadataPublisher;
-    this.namespaceAdmin = namespaceAdmin;
+    this.namespaceQueryAdmin = namespaceQueryAdmin;
   }
 
   @Override
@@ -194,7 +194,7 @@ public final class SparkProgramRunner extends AbstractProgramRunnerWithPlugin
                                                                    authorizationEnforcer, authenticationContext,
                                                                    messagingService, serviceAnnouncer, pluginFinder,
                                                                    locationFactory, metadataReader, metadataPublisher,
-                                                                   namespaceAdmin);
+                                                                   namespaceQueryAdmin);
       closeables.addFirst(runtimeContext);
 
       Spark spark;

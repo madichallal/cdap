@@ -28,7 +28,7 @@ import co.cask.cdap.app.program.Program;
 import co.cask.cdap.app.program.ProgramDescriptor;
 import co.cask.cdap.app.runtime.ProgramOptions;
 import co.cask.cdap.common.conf.CConfiguration;
-import co.cask.cdap.common.namespace.NamespaceAdmin;
+import co.cask.cdap.common.namespace.NamespaceQueryAdmin;
 import co.cask.cdap.data.ProgramContextAware;
 import co.cask.cdap.data2.dataset2.DatasetFramework;
 import co.cask.cdap.data2.metadata.writer.MetadataPublisher;
@@ -247,14 +247,14 @@ public class MapReduceTaskContextProvider extends AbstractIdleService {
         }
         CConfiguration cConf = injector.getInstance(CConfiguration.class);
         TransactionSystemClient txClient = injector.getInstance(TransactionSystemClient.class);
-        NamespaceAdmin namespaceAdmin = injector.getInstance(NamespaceAdmin.class);
+        NamespaceQueryAdmin namespaceQueryAdmin = injector.getInstance(NamespaceQueryAdmin.class);
         return new BasicMapReduceTaskContext(
           program, options, cConf, taskType, taskId,
           spec, workflowInfo, discoveryServiceClient, metricsCollectionService, txClient,
           transaction, programDatasetFramework, classLoader.getPluginInstantiator(),
           contextConfig.getLocalizedResources(), secureStore, secureStoreManager,
           authorizationEnforcer, authenticationContext, messagingService, mapReduceClassLoader, metadataReader,
-          metadataPublisher, namespaceAdmin
+          metadataPublisher, namespaceQueryAdmin
         );
       }
     };

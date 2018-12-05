@@ -21,7 +21,7 @@ import co.cask.cdap.api.messaging.MessagingAdmin;
 import co.cask.cdap.api.messaging.TopicAlreadyExistsException;
 import co.cask.cdap.api.messaging.TopicNotFoundException;
 import co.cask.cdap.api.security.store.SecureStoreManager;
-import co.cask.cdap.common.namespace.NamespaceAdmin;
+import co.cask.cdap.common.namespace.NamespaceQueryAdmin;
 import co.cask.cdap.common.service.Retries;
 import co.cask.cdap.common.service.RetryStrategies;
 import co.cask.cdap.common.service.RetryStrategy;
@@ -42,14 +42,14 @@ public class DefaultAdmin extends DefaultDatasetManager implements Admin {
   private final SecureStoreManager secureStoreManager;
   private final MessagingAdmin messagingAdmin;
   private final RetryStrategy retryStrategy;
-  private final NamespaceAdmin namespaceAdmin;
+  private final NamespaceQueryAdmin namespaceQueryAdmin;
 
   /**
    * Creates an instance without messaging admin support.
    */
   public DefaultAdmin(DatasetFramework dsFramework, NamespaceId namespace, SecureStoreManager secureStoreManager,
-                      NamespaceAdmin namespaceAdmin) {
-    this(dsFramework, namespace, secureStoreManager, null, RetryStrategies.noRetry(), null, namespaceAdmin);
+                      NamespaceQueryAdmin namespaceQueryAdmin) {
+    this(dsFramework, namespace, secureStoreManager, null, RetryStrategies.noRetry(), null, namespaceQueryAdmin);
   }
 
   /**
@@ -58,12 +58,12 @@ public class DefaultAdmin extends DefaultDatasetManager implements Admin {
   public DefaultAdmin(DatasetFramework dsFramework, NamespaceId namespace,
                       SecureStoreManager secureStoreManager, @Nullable MessagingAdmin messagingAdmin,
                       RetryStrategy retryStrategy, @Nullable KerberosPrincipalId principalId,
-                      NamespaceAdmin namespaceAdmin) {
+                      NamespaceQueryAdmin namespaceQueryAdmin) {
     super(dsFramework, namespace, retryStrategy, principalId);
     this.secureStoreManager = secureStoreManager;
     this.messagingAdmin = messagingAdmin;
     this.retryStrategy = retryStrategy;
-    this.namespaceAdmin = namespaceAdmin;
+    this.namespaceQueryAdmin = namespaceQueryAdmin;
   }
 
   @Override
@@ -167,7 +167,7 @@ public class DefaultAdmin extends DefaultDatasetManager implements Admin {
   @Override
   public boolean namespaceExists(String namespace) throws IOException {
     try {
-      return namespaceAdmin.exists(new NamespaceId(namespace));
+      return namespaceQueryAdmin.exists(new NamespaceId(namespace));
     } catch (Exception e) {
       throw new IOException(e);
     }

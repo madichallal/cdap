@@ -28,7 +28,7 @@ import co.cask.cdap.app.runtime.ProgramController;
 import co.cask.cdap.app.runtime.ProgramOptions;
 import co.cask.cdap.app.runtime.ProgramRunner;
 import co.cask.cdap.common.conf.CConfiguration;
-import co.cask.cdap.common.namespace.NamespaceAdmin;
+import co.cask.cdap.common.namespace.NamespaceQueryAdmin;
 import co.cask.cdap.common.service.RetryStrategy;
 import co.cask.cdap.data.ProgramContextAware;
 import co.cask.cdap.data2.dataset2.DatasetFramework;
@@ -74,7 +74,7 @@ public class ServiceProgramRunner extends AbstractProgramRunnerWithPlugin {
   private final ArtifactManagerFactory artifactManagerFactory;
   private final MetadataReader metadataReader;
   private final MetadataPublisher metadataPublisher;
-  private final NamespaceAdmin namespaceAdmin;
+  private final NamespaceQueryAdmin namespaceQueryAdmin;
 
   @Inject
   public ServiceProgramRunner(CConfiguration cConf, MetricsCollectionService metricsCollectionService,
@@ -84,7 +84,7 @@ public class ServiceProgramRunner extends AbstractProgramRunnerWithPlugin {
                               MessagingService messagingService,
                               ArtifactManagerFactory artifactManagerFactory,
                               MetadataReader metadataReader, MetadataPublisher metadataPublisher,
-                              NamespaceAdmin namespaceAdmin) {
+                              NamespaceQueryAdmin namespaceQueryAdmin) {
     super(cConf);
     this.metricsCollectionService = metricsCollectionService;
     this.datasetFramework = datasetFramework;
@@ -97,7 +97,7 @@ public class ServiceProgramRunner extends AbstractProgramRunnerWithPlugin {
     this.artifactManagerFactory = artifactManagerFactory;
     this.metadataReader = metadataReader;
     this.metadataPublisher = metadataPublisher;
-    this.namespaceAdmin = namespaceAdmin;
+    this.namespaceQueryAdmin = namespaceQueryAdmin;
   }
 
   @Override
@@ -139,7 +139,7 @@ public class ServiceProgramRunner extends AbstractProgramRunnerWithPlugin {
                                                           txClient, discoveryServiceClient,
                                                           pluginInstantiator, secureStore, secureStoreManager,
                                                           messagingService, artifactManager, metadataReader,
-                                                          metadataPublisher, namespaceAdmin);
+                                                          metadataPublisher, namespaceQueryAdmin);
 
       // Add a service listener to make sure the plugin instantiator is closed when the http server is finished.
       component.addListener(createRuntimeServiceListener(Collections.singleton((Closeable) pluginInstantiator)),

@@ -28,7 +28,7 @@ import co.cask.cdap.app.runtime.ProgramOptions;
 import co.cask.cdap.common.conf.CConfiguration;
 import co.cask.cdap.common.conf.Constants;
 import co.cask.cdap.common.logging.LoggingContext;
-import co.cask.cdap.common.namespace.NamespaceAdmin;
+import co.cask.cdap.common.namespace.NamespaceQueryAdmin;
 import co.cask.cdap.common.utils.ImmutablePair;
 import co.cask.cdap.data2.dataset2.DatasetFramework;
 import co.cask.cdap.data2.metadata.writer.MetadataPublisher;
@@ -73,12 +73,13 @@ final class BasicFlowletContext extends AbstractContext implements FlowletContex
                       SecureStoreManager secureStoreManager,
                       MessagingService messagingService,
                       MetadataReader metadataReader, MetadataPublisher metadataPublisher,
-                      NamespaceAdmin namespaceAdmin,
+                      NamespaceQueryAdmin namespaceQueryAdmin,
                       CConfiguration cConf) {
     super(program, programOptions, cConf, datasets, dsFramework, txClient, discoveryServiceClient, false,
           metricsService, ImmutableMap.of(Constants.Metrics.Tag.FLOWLET, flowletId.getFlowlet(),
                                           Constants.Metrics.Tag.INSTANCE_ID, String.valueOf(instanceId)),
-          secureStore, secureStoreManager, messagingService, null, metadataReader, metadataPublisher, namespaceAdmin);
+          secureStore, secureStoreManager, messagingService, null, metadataReader, metadataPublisher,
+          namespaceQueryAdmin);
 
     this.flowletId = flowletId;
     this.groupId = FlowUtils.generateConsumerGroupId(program.getId(), flowletId.getFlowlet());

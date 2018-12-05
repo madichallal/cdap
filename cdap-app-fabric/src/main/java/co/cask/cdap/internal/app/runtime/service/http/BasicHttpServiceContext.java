@@ -29,7 +29,7 @@ import co.cask.cdap.app.program.Program;
 import co.cask.cdap.app.runtime.ProgramOptions;
 import co.cask.cdap.common.conf.CConfiguration;
 import co.cask.cdap.common.conf.Constants;
-import co.cask.cdap.common.namespace.NamespaceAdmin;
+import co.cask.cdap.common.namespace.NamespaceQueryAdmin;
 import co.cask.cdap.data2.dataset2.DatasetFramework;
 import co.cask.cdap.data2.metadata.writer.MetadataPublisher;
 import co.cask.cdap.internal.app.runtime.AbstractContext;
@@ -82,12 +82,12 @@ public class BasicHttpServiceContext extends AbstractContext implements HttpServ
                                  MessagingService messagingService,
                                  ArtifactManager artifactManager, MetadataReader metadataReader,
                                  MetadataPublisher metadataPublisher,
-                                 NamespaceAdmin namespaceAdmin) {
+                                 NamespaceQueryAdmin namespaceQueryAdmin) {
     super(program, programOptions, cConf, spec == null ? Collections.emptySet() : spec.getDatasets(),
           dsFramework, txClient, discoveryServiceClient, false,
           metricsCollectionService, createMetricsTags(spec, instanceId),
           secureStore, secureStoreManager, messagingService, pluginInstantiator, metadataReader, metadataPublisher,
-          namespaceAdmin);
+          namespaceQueryAdmin);
     this.spec = spec;
     this.instanceId = instanceId;
     this.instanceCount = instanceCount;

@@ -52,7 +52,7 @@ import co.cask.cdap.common.conf.Constants;
 import co.cask.cdap.common.io.BinaryDecoder;
 import co.cask.cdap.common.lang.InstantiatorFactory;
 import co.cask.cdap.common.lang.PropertyFieldSetter;
-import co.cask.cdap.common.namespace.NamespaceAdmin;
+import co.cask.cdap.common.namespace.NamespaceQueryAdmin;
 import co.cask.cdap.common.queue.QueueName;
 import co.cask.cdap.common.utils.ImmutablePair;
 import co.cask.cdap.data.ProgramContext;
@@ -152,7 +152,7 @@ public final class FlowletProgramRunner implements ProgramRunner {
   private final MessagingService messageService;
   private final MetadataReader metadataReader;
   private final MetadataPublisher metadataPublisher;
-  private final NamespaceAdmin namespaceAdmin;
+  private final NamespaceQueryAdmin namespaceQueryAdmin;
 
   @Inject
   public FlowletProgramRunner(CConfiguration cConfiguration,
@@ -169,7 +169,7 @@ public final class FlowletProgramRunner implements ProgramRunner {
                               SecureStore secureStore,
                               SecureStoreManager secureStoreManager,
                               MessagingService messagingService, MetadataReader metadataReader,
-                              MetadataPublisher metadataPublisher, NamespaceAdmin namespaceAdmin) {
+                              MetadataPublisher metadataPublisher, NamespaceQueryAdmin namespaceQueryAdmin) {
     this.cConf = cConfiguration;
     this.schemaGenerator = schemaGenerator;
     this.datumWriterFactory = datumWriterFactory;
@@ -186,7 +186,7 @@ public final class FlowletProgramRunner implements ProgramRunner {
     this.messageService = messagingService;
     this.metadataReader = metadataReader;
     this.metadataPublisher = metadataPublisher;
-    this.namespaceAdmin = namespaceAdmin;
+    this.namespaceQueryAdmin = namespaceQueryAdmin;
   }
 
   @SuppressWarnings("unchecked")
@@ -239,7 +239,7 @@ public final class FlowletProgramRunner implements ProgramRunner {
                                                flowletDef.getDatasets(), flowletDef.getFlowletSpec(),
                                                metricsCollectionService, discoveryServiceClient, txClient,
                                                dsFramework, secureStore, secureStoreManager, messageService,
-                                               metadataReader, metadataPublisher, namespaceAdmin, cConf);
+                                               metadataReader, metadataPublisher, namespaceQueryAdmin, cConf);
 
       // Creates tx related objects
       DataFabricFacade dataFabricFacade =

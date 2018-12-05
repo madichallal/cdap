@@ -30,7 +30,7 @@ import co.cask.cdap.app.program.Program;
 import co.cask.cdap.app.runtime.ProgramOptions;
 import co.cask.cdap.common.conf.CConfiguration;
 import co.cask.cdap.common.conf.Constants;
-import co.cask.cdap.common.namespace.NamespaceAdmin;
+import co.cask.cdap.common.namespace.NamespaceQueryAdmin;
 import co.cask.cdap.data2.dataset2.DatasetFramework;
 import co.cask.cdap.data2.metadata.writer.MetadataPublisher;
 import co.cask.cdap.internal.app.runtime.AbstractContext;
@@ -67,13 +67,13 @@ final class BasicWorkflowContext extends AbstractContext implements WorkflowCont
                        SecureStore secureStore, SecureStoreManager secureStoreManager,
                        MessagingService messagingService, @Nullable ConditionSpecification conditionSpecification,
                        MetadataReader metadataReader, MetadataPublisher metadataPublisher,
-                       NamespaceAdmin namespaceAdmin) {
-    super(program, programOptions, cConf, new HashSet(),
+                       NamespaceQueryAdmin namespaceQueryAdmin) {
+    super(program, programOptions, cConf, new HashSet<>(),
           datasetFramework, txClient, discoveryServiceClient, false,
           metricsCollectionService, Collections.singletonMap(Constants.Metrics.Tag.WORKFLOW_RUN_ID,
                                                              ProgramRunners.getRunId(programOptions).getId()),
           secureStore, secureStoreManager, messagingService, pluginInstantiator, metadataReader, metadataPublisher,
-          namespaceAdmin);
+          namespaceQueryAdmin);
     this.workflowSpec = workflowSpec;
     this.conditionSpecification = conditionSpecification;
     this.token = token;
