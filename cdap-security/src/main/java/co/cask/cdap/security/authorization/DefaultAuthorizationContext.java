@@ -72,8 +72,18 @@ public class DefaultAuthorizationContext implements AuthorizationContext {
   }
 
   @Override
+  public boolean datasetExists(String namespace, String name) throws DatasetManagementException {
+    return delegateAdmin.datasetExists(namespace, name);
+  }
+
+  @Override
   public String getDatasetType(String name) throws DatasetManagementException {
     return delegateAdmin.getDatasetType(name);
+  }
+
+  @Override
+  public String getDatasetType(String namespace, String name) throws DatasetManagementException {
+    return delegateAdmin.getDatasetType(namespace, name);
   }
 
   @Override
@@ -82,8 +92,19 @@ public class DefaultAuthorizationContext implements AuthorizationContext {
   }
 
   @Override
+  public DatasetProperties getDatasetProperties(String namespace, String name) throws DatasetManagementException {
+    return delegateAdmin.getDatasetProperties(namespace, name);
+  }
+
+  @Override
   public void createDataset(String name, String type, DatasetProperties properties) throws DatasetManagementException {
     delegateAdmin.createDataset(name, type, properties);
+  }
+
+  @Override
+  public void createDataset(String namespace, String name, String type, DatasetProperties properties)
+    throws DatasetManagementException {
+    delegateAdmin.createDataset(namespace, name, type, properties);
   }
 
   @Override
@@ -92,13 +113,29 @@ public class DefaultAuthorizationContext implements AuthorizationContext {
   }
 
   @Override
+  public void updateDataset(String namespace, String name, DatasetProperties properties)
+    throws DatasetManagementException {
+    delegateAdmin.updateDataset(namespace, name, properties);
+  }
+
+  @Override
   public void dropDataset(String name) throws DatasetManagementException {
     delegateAdmin.dropDataset(name);
   }
 
   @Override
+  public void dropDataset(String namespace, String name) throws DatasetManagementException {
+    delegateAdmin.dropDataset(namespace, name);
+  }
+
+  @Override
   public void truncateDataset(String name) throws DatasetManagementException {
     delegateAdmin.truncateDataset(name);
+  }
+
+  @Override
+  public void truncateDataset(String namespace, String name) throws DatasetManagementException {
+    delegateAdmin.truncateDataset(namespace, name);
   }
 
   @Override
@@ -199,5 +236,10 @@ public class DefaultAuthorizationContext implements AuthorizationContext {
   @Override
   public SecureStoreData getSecureData(String namespace, String name) throws Exception {
     return delegateSecureStore.getSecureData(namespace, name);
+  }
+
+  @Override
+  public boolean namespaceExists(String namespace) throws IOException {
+    return delegateAdmin.namespaceExists(namespace);
   }
 }

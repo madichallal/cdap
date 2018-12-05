@@ -36,6 +36,14 @@ public interface ArtifactManager {
   List<ArtifactInfo> listArtifacts() throws IOException;
 
   /**
+   * Get the list of artifacts in the repository in the specified namespace and system namespace
+   *
+   * @return {@link List<ArtifactInfo>} list of artifact info
+   * @throws IOException when there is an error retrieving artifacts
+   */
+  List<ArtifactInfo> listArtifacts(String namespace) throws IOException;
+
+  /**
    * Create a class loader using the artifact represented by artifactInfo with parent as parentClassloader
    * Call to this method might take a long time based on the size of the artifact.
    * If called from short transactions, it is possible this call will timeout if the artifact size is large

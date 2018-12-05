@@ -32,6 +32,7 @@ import co.cask.cdap.common.conf.CConfiguration;
 import co.cask.cdap.common.conf.Constants;
 import co.cask.cdap.common.id.Id;
 import co.cask.cdap.common.logging.LoggingContext;
+import co.cask.cdap.common.namespace.NamespaceAdmin;
 import co.cask.cdap.data2.dataset2.DatasetFramework;
 import co.cask.cdap.data2.metadata.writer.MetadataPublisher;
 import co.cask.cdap.internal.app.runtime.AbstractContext;
@@ -71,11 +72,13 @@ final class BasicWorkerContext extends AbstractContext implements WorkerContext 
                      SecureStore secureStore,
                      SecureStoreManager secureStoreManager,
                      MessagingService messagingService, MetadataReader metadataReader,
-                     MetadataPublisher metadataPublisher) {
+                     MetadataPublisher metadataPublisher,
+                     NamespaceAdmin namespaceAdmin) {
     super(program, programOptions, cConf, spec.getDatasets(),
           datasetFramework, transactionSystemClient, discoveryServiceClient, true,
           metricsCollectionService, ImmutableMap.of(Constants.Metrics.Tag.INSTANCE_ID, String.valueOf(instanceId)),
-          secureStore, secureStoreManager, messagingService, pluginInstantiator, metadataReader, metadataPublisher);
+          secureStore, secureStoreManager, messagingService, pluginInstantiator, metadataReader, metadataPublisher,
+          namespaceAdmin);
 
     this.specification = spec;
     this.instanceId = instanceId;

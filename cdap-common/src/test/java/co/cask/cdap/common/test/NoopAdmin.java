@@ -38,12 +38,27 @@ public class NoopAdmin implements Admin {
   }
 
   @Override
+  public boolean datasetExists(String namespace, String name) throws DatasetManagementException {
+    return false;
+  }
+
+  @Override
   public String getDatasetType(String name) throws DatasetManagementException {
     throw new InstanceNotFoundException(name);
   }
 
   @Override
+  public String getDatasetType(String namespace, String name) throws DatasetManagementException {
+    throw new InstanceNotFoundException(name);
+  }
+
+  @Override
   public DatasetProperties getDatasetProperties(String name) throws DatasetManagementException {
+    throw new InstanceNotFoundException(name);
+  }
+
+  @Override
+  public DatasetProperties getDatasetProperties(String namespace, String name) throws DatasetManagementException {
     throw new InstanceNotFoundException(name);
   }
 
@@ -54,7 +69,19 @@ public class NoopAdmin implements Admin {
   }
 
   @Override
+  public void createDataset(String namespace, String name, String type, DatasetProperties properties)
+    throws DatasetManagementException {
+    //no-op
+  }
+
+  @Override
   public void updateDataset(String name, DatasetProperties properties) throws DatasetManagementException {
+    //no-op
+  }
+
+  @Override
+  public void updateDataset(String namespace, String name, DatasetProperties properties)
+    throws DatasetManagementException {
     //no-op
   }
 
@@ -64,7 +91,17 @@ public class NoopAdmin implements Admin {
   }
 
   @Override
+  public void dropDataset(String namespace, String name) throws DatasetManagementException {
+    //no-op
+  }
+
+  @Override
   public void truncateDataset(String name) throws DatasetManagementException {
+    //no-op
+  }
+
+  @Override
+  public void truncateDataset(String namespace, String name) throws DatasetManagementException {
     //no-op
   }
 
@@ -103,5 +140,10 @@ public class NoopAdmin implements Admin {
   @Override
   public void deleteTopic(String topic) throws TopicNotFoundException, IOException {
     // no-op
+  }
+
+  @Override
+  public boolean namespaceExists(String namespace) throws IOException {
+    return false;
   }
 }

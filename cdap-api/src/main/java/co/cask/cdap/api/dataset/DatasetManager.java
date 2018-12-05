@@ -26,6 +26,7 @@ public interface DatasetManager {
 
   /**
    * Check whether a dataset exists in the current namespace.
+   *
    * @param name the name of the dataset
    * @return whether a dataset of that name exists
    * @throws DatasetManagementException for any issues encountered in the dataset system
@@ -33,7 +34,18 @@ public interface DatasetManager {
   boolean datasetExists(String name) throws DatasetManagementException;
 
   /**
+   * Check whether a dataset exists in the specified namespace.
+   *
+   * @param namespace the namespace of the dataset
+   * @param name the name of the dataset
+   * @return whether a dataset of that name in that namespace exists
+   * @throws DatasetManagementException for any issues encountered in the dataset system
+   */
+  boolean datasetExists(String namespace, String name) throws DatasetManagementException;
+
+  /**
    * Get the type of a dataset.
+   *
    * @param name the name of a dataset
    * @return the type of the dataset, if it exists; null otherwise
    * @throws InstanceNotFoundException if the dataset does not exist
@@ -42,7 +54,19 @@ public interface DatasetManager {
   String getDatasetType(String name) throws DatasetManagementException;
 
   /**
+   * Get the type of a dataset in the specified namespace.
+   *
+   * @param namespace the namespace of the dataset
+   * @param name the name of a dataset
+   * @return the type of the dataset, if it exists; null otherwise
+   * @throws InstanceNotFoundException if the dataset does not exist
+   * @throws DatasetManagementException for any issues encountered in the dataset system
+   */
+  String getDatasetType(String namespace, String name) throws DatasetManagementException;
+
+  /**
    * Get the properties with which a dataset was created or updated.
+   *
    * @param name the name of the dataset
    * @return The properties that were used to create or update the dataset, or null if the dataset does not exist.
    * @throws InstanceNotFoundException if the dataset does not exist
@@ -51,7 +75,19 @@ public interface DatasetManager {
   DatasetProperties getDatasetProperties(String name) throws DatasetManagementException;
 
   /**
+   * Get the properties of a dataset in the specified namespace.
+   *
+   * @param namespace the namespace of the dataset
+   * @param name the name of the dataset
+   * @return The properties that were used to create or update the dataset, or null if the dataset does not exist.
+   * @throws InstanceNotFoundException if the dataset does not exist
+   * @throws DatasetManagementException for any issues encountered in the dataset system
+   */
+  DatasetProperties getDatasetProperties(String namespace, String name) throws DatasetManagementException;
+
+  /**
    * Create a new dataset instance.
+   *
    * @param name the name of the new dataset
    * @param type the type of the dataset to create
    * @param properties the properties for the new dataset
@@ -62,7 +98,22 @@ public interface DatasetManager {
   void createDataset(String name, String type, DatasetProperties properties) throws DatasetManagementException;
 
   /**
+   * Create a new dataset instance in the specified namespace.
+   *
+   * @param namespace the namespace to create the dataset in
+   * @param name the name of the new dataset
+   * @param type the type of the dataset to create
+   * @param properties the properties for the new dataset
+   * @throws InstanceConflictException if the dataset already exists
+   * @throws DatasetManagementException for any issues encountered in the dataset system,
+   *         or if the dataset type's create method fails.
+   */
+  void createDataset(String namespace, String name, String type,
+                     DatasetProperties properties) throws DatasetManagementException;
+
+  /**
    * Update an existing dataset with new properties.
+   *
    * @param name the name of the dataset
    * @param properties the new properties for the dataset
    * @throws InstanceNotFoundException if the dataset does not exist
@@ -72,7 +123,20 @@ public interface DatasetManager {
   void updateDataset(String name, DatasetProperties properties) throws DatasetManagementException;
 
   /**
+   * Update an existing dataset in the specified namespace with new properties.
+   *
+   * @param namespace the namespace of the dataset
+   * @param name the name of the dataset
+   * @param properties the new properties for the dataset
+   * @throws InstanceNotFoundException if the dataset does not exist
+   * @throws DatasetManagementException for any issues encountered in the dataset system,
+   *         or if the dataset type's update method fails.
+   */
+  void updateDataset(String namespace, String name, DatasetProperties properties) throws DatasetManagementException;
+
+  /**
    * Delete a dataset instance.
+   *
    * @param name the name of the dataset
    * @throws InstanceNotFoundException if the dataset does not exist
    * @throws DatasetManagementException for any issues encountered in the dataset system,
@@ -81,11 +145,34 @@ public interface DatasetManager {
   void dropDataset(String name) throws DatasetManagementException;
 
   /**
+   * Delete a dataset instance in the specified namespace.
+   *
+   * @param namespace the namespace of the dataset
+   * @param name the name of the dataset
+   * @throws InstanceNotFoundException if the dataset does not exist
+   * @throws DatasetManagementException for any issues encountered in the dataset system,
+   *         or if the dataset type's drop method fails.
+   */
+  void dropDataset(String namespace, String name) throws DatasetManagementException;
+
+  /**
    * Truncate a dataset, that is, delete all its data.
+   *
    * @param name the name of the dataset
    * @throws InstanceNotFoundException if the dataset does not exist
    * @throws DatasetManagementException for any issues encountered in the dataset system,
    *         or if the dataset type's truncate method fails.
    */
   void truncateDataset(String name) throws DatasetManagementException;
+
+  /**
+   * Truncate a dataset in the specified namespace, that is, delete all its data.
+   *
+   * @param namespace the namespace of the dataset
+   * @param name the name of the dataset
+   * @throws InstanceNotFoundException if the dataset does not exist
+   * @throws DatasetManagementException for any issues encountered in the dataset system,
+   *         or if the dataset type's truncate method fails.
+   */
+  void truncateDataset(String namespace, String name) throws DatasetManagementException;
 }
