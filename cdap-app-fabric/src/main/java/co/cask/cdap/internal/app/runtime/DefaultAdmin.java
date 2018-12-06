@@ -168,6 +168,8 @@ public class DefaultAdmin extends DefaultDatasetManager implements Admin {
   public boolean namespaceExists(String namespace) throws IOException {
     try {
       return namespaceQueryAdmin.exists(new NamespaceId(namespace));
+    } catch (IOException e) {
+      throw e;
     } catch (Exception e) {
       throw new IOException(e);
     }
