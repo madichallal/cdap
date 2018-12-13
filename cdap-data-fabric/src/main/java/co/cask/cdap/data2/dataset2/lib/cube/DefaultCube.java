@@ -56,8 +56,10 @@ import java.util.Map;
 import java.util.SortedSet;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 
 /**
@@ -87,8 +89,9 @@ public class DefaultCube implements Cube, MeteredDataset {
       resolutionToFactTable.put(resolution, factTableSupplier.get(resolution, 3600));
     }
     this.aggregationAliasMap = aggregationAliasMap;
-    this.executorService = Executors.newFixedThreadPool(resolutions.length,
-                                                        Threads.createDaemonThreadFactory("metrics-table-%d"));
+    this.executorService = new ThreadPoolExecutor(0, resolutions.length, 0, TimeUnit.SECONDS,
+                                                  new LinkedBlockingQueue<>(),
+                                                  Threads.createDaemonThreadFactory("metrics-table-%d"));
   }
 
   @Override
