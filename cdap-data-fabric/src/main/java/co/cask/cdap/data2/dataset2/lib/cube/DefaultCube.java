@@ -127,13 +127,25 @@ public class DefaultCube implements Cube, MeteredDataset {
       futures.put(table.getKey(), executorService.submit(() -> table.getValue().add(toWrite)));
     }
 
+    boolean failed = false;
+    Exception failedException = null;
+    StringBuilder failedMessage = new StringBuilder("Failed to add metrics to ");
     for (Map.Entry<Integer, Future> future : futures.entrySet()) {
       try {
         future.getValue().get();
       } catch (InterruptedException | ExecutionException e) {
-        throw new RuntimeException(String.format("Failed to add metrics to the %d " +
-                                                   "resolution table", future.getKey()), e);
+        if (!failed) {
+          failed = true;
+          failedMessage.append(String.format("the %d resolution table", future.getKey()));
+        } else {
+          failedMessage.append(String.format(", the %d resolution table", future.getKey()));
+        }
+        failedException = e;
       }
+    }
+
+    if (failed) {
+      throw new RuntimeException(failedMessage.append(".").toString(), failedException);
     }
 
     incrementMetric("cube.cubeFact.add.request.count", 1);
@@ -461,6 +473,7 @@ public class DefaultCube implements Cube, MeteredDataset {
     for (FactTable factTable : resolutionToFactTable.values()) {
       factTable.close();
     }
+    executorService.shutdown();
   }
 
   private static final class DimensionValueComparator implements Comparator<DimensionValue> {
