@@ -19,7 +19,7 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import { Dropdown, DropdownMenu, DropdownToggle } from 'reactstrap';
 import AbstractWizard from 'components/AbstractWizard';
-import NamespaceStore from 'services/NamespaceStore';
+import NamespaceStore, { INamespace } from 'services/NamespaceStore';
 import NamespaceActions from 'services/NamespaceStore/NamespaceActions';
 import SetPreferenceAction from 'components/FastAction/SetPreferenceAction';
 import { PREFERENCES_LEVEL } from 'components/FastAction/SetPreferenceAction/SetPreferenceModal';
@@ -39,55 +39,94 @@ import If from 'components/If';
 import classnames from 'classnames';
 require('./NamespaceDropdown.scss');
 
-export default class NamespaceDropdown extends Component {
+interface INamespaceDropdownProps {
+  tag?: React.ReactNode;
+  onNamespaceCreate?: () => void;
+  onNamespacePreferenceEdit?: () => void;
+}
+interface INamespaceDropdownState {
+  openDropdown: boolean;
+  openWizard: boolean;
+  openPreferenceWizard: boolean;
+  numMetricsLoading: boolean;
+  preferencesSavedMessage: boolean;
+  numApplications: number;
+  numDatasets: number;
+  numStreams: number;
+  namespaceList: INamespace[];
+  defaultNamespace: string;
+  currentNamespace: string;
+  error: string;
+}
+
+export default class NamespaceDropdown extends React.PureComponent<
+  INamespaceDropdownProps,
+  INamespaceDropdownState
+> {
   constructor(props) {
     super(props);
-    this.state = {
-      openDropdown: false,
-      openWizard: false,
-      openPreferenceWizard: false,
-      preferencesSavedMessage: false,
-      namespaceList: sortBy(NamespaceStore.getState().namespaces, [this.lowerCaseNamespace]),
-      currentNamespace: NamespaceStore.getState().selectedNamespace,
-      defaultNamespace: localStorage.getItem('DefaultNamespace'),
-    };
 
-    this.subscription = NamespaceStore.subscribe(() => {
-      let selectedNamespace = NamespaceStore.getState().selectedNamespace;
-      let namespaces = NamespaceStore.getState().namespaces.map((ns) => ns.name);
-      if (namespaces.indexOf(selectedNamespace) === -1) {
-        this.setState({
-          currentNamespace: '--',
-          namespaceList: sortBy(NamespaceStore.getState().namespaces, [this.lowerCaseNamespace]),
-        });
-      } else {
-        // have to set this, because the Namespace store gets reset when we visit other apps
-        // e.g. Hydrator or Tracker
-        localStorage.setItem('CurrentNamespace', selectedNamespace);
-        this.setState({
-          currentNamespace: NamespaceStore.getState().selectedNamespace,
-          namespaceList: sortBy(NamespaceStore.getState().namespaces, [this.lowerCaseNamespace]),
-        });
-      }
-    });
-
-    this.toggle = this.toggle.bind(this);
-    this.showNamespaceWizard = this.showNamespaceWizard.bind(this);
-    this.hideNamespaceWizard = this.hideNamespaceWizard.bind(this);
-    this.eventEmitter = ee(ee);
     this.eventEmitter.on(globalEvents.CREATENAMESPACE, () => {
       this.setState({
         openWizard: true,
       });
     });
   }
-  componentWillUnmount() {
+
+  private lowerCaseNamespace = (namespace) => {
+    return namespace.name.toLowerCase();
+  };
+
+  public state: INamespaceDropdownState = {
+    openDropdown: false,
+    openWizard: false,
+    openPreferenceWizard: false,
+    preferencesSavedMessage: false,
+    namespaceList: sortBy(NamespaceStore.getState().namespaces, [
+      this.lowerCaseNamespace,
+    ]) as INamespace[],
+    currentNamespace: NamespaceStore.getState().selectedNamespace,
+    defaultNamespace: localStorage.getItem('DefaultNamespace'),
+    numMetricsLoading: false,
+    numApplications: 0,
+    numDatasets: 0,
+    numStreams: 0,
+    error: '',
+  };
+
+  private eventEmitter = ee(ee);
+
+  private apiSubscription;
+
+  private subscription = NamespaceStore.subscribe(() => {
+    const selectedNamespace = NamespaceStore.getState().selectedNamespace;
+    const namespaces = NamespaceStore.getState().namespaces.map((ns) => ns.name);
+    if (namespaces.indexOf(selectedNamespace) === -1) {
+      this.setState({
+        currentNamespace: '--',
+        namespaceList: sortBy(NamespaceStore.getState().namespaces, [
+          this.lowerCaseNamespace,
+        ]) as INamespace[],
+      });
+    } else {
+      // have to set this, because the Namespace store gets reset when we visit other apps
+      // e.g. Hydrator or Tracker
+      localStorage.setItem('CurrentNamespace', selectedNamespace);
+      this.setState({
+        currentNamespace: NamespaceStore.getState().selectedNamespace,
+        namespaceList: sortBy(NamespaceStore.getState().namespaces, [
+          this.lowerCaseNamespace,
+        ]) as INamespace[],
+      });
+    }
+  });
+  public componentWillUnmount() {
     this.subscription();
     if (this.apiSubscription) {
       this.apiSubscription.unsubscribe();
     }
   }
-  toggle() {
+  private toggle = () => {
     if (!this.state.openPreferenceWizard) {
       if (this.state.openDropdown === false) {
         this.getNumMetrics();
@@ -97,25 +136,39 @@ export default class NamespaceDropdown extends Component {
       });
       document.querySelector('.namespace-list').scrollTop = 0;
     }
-  }
-  showNamespaceWizard() {
-    this.setState({
-      openWizard: !this.state.openWizard,
-      openDropdown: !this.state.openDropdown,
-    });
-  }
-  hideNamespaceWizard() {
+  };
+
+  private showNamespaceWizard = () => {
+    this.setState(
+      {
+        openWizard: !this.state.openWizard,
+        openDropdown: !this.state.openDropdown,
+      },
+      () => {
+        const { onNamespaceCreate } = this.props;
+        if (onNamespaceCreate && typeof onNamespaceCreate === 'function') {
+          onNamespaceCreate();
+        }
+      }
+    );
+  };
+
+  private hideNamespaceWizard = () => {
     this.setState({
       openWizard: false,
     });
-  }
-  lowerCaseNamespace(namespace) {
-    return namespace.name.toLowerCase();
-  }
-  preferenceWizardIsOpen(openState) {
-    this.setState({ openPreferenceWizard: openState });
-  }
-  selectNamespace(name) {
+  };
+
+  private preferenceWizardIsOpen = (openState) => {
+    this.setState({ openPreferenceWizard: openState }, () => {
+      const { onNamespacePreferenceEdit } = this.props;
+      if (onNamespacePreferenceEdit && typeof onNamespacePreferenceEdit === 'function') {
+        onNamespacePreferenceEdit();
+      }
+    });
+  };
+
+  private selectNamespace = (name) => {
     NamespaceStore.dispatch({
       type: NamespaceActions.selectNamespace,
       payload: {
@@ -123,14 +176,16 @@ export default class NamespaceDropdown extends Component {
       },
     });
     this.toggle();
-  }
-  preferencesAreSaved() {
+  };
+
+  private preferencesAreSaved = () => {
     this.setState({ preferencesSavedMessage: true });
     setTimeout(() => {
       this.setState({ preferencesSavedMessage: false });
     }, 3000);
-  }
-  setDefault(clickedNamespace, event) {
+  };
+
+  private setDefault = (clickedNamespace, event) => {
     event.preventDefault();
     event.stopPropagation();
     event.nativeEvent.stopImmediatePropagation();
@@ -140,10 +195,11 @@ export default class NamespaceDropdown extends Component {
       });
       localStorage.setItem('DefaultNamespace', clickedNamespace);
     }
-  }
-  getNumMetrics() {
+  };
+
+  private getNumMetrics = () => {
     this.setState({ numMetricsLoading: true });
-    let params = {
+    const params = {
       namespace: NamespaceStore.getState().selectedNamespace,
       target: ['app', 'dataset', 'stream'],
       query: '*',
@@ -155,7 +211,7 @@ export default class NamespaceDropdown extends Component {
     this.apiSubscription = MySearchApi.search(params).subscribe(
       (res) => {
         res.results.forEach((entity) => {
-          let entityType = entity.entityId.entity;
+          const entityType = entity.entityId.entity;
           if (entityType === EntityType.application) {
             numApplications += 1;
           } else if (entityType === EntityType.stream) {
@@ -177,27 +233,28 @@ export default class NamespaceDropdown extends Component {
         });
       }
     );
-  }
-  render() {
+  };
+
+  public render() {
     let LinkEl = Link;
     let baseurl = '';
     if (this.props.tag) {
-      let basename = document.querySelector('base');
+      const basename = document.querySelector('base');
       let baseurlname = basename.getAttribute('href');
       // FIXME: This is a one of thing (an interim solution) and that should go away in subsequent releases.
       if (baseurlname.indexOf('logviewer') !== -1) {
         baseurlname = '/cdap/';
       }
-      basename = baseurlname ? baseurlname : null;
+      const basenameStr: string | null = baseurlname ? baseurlname : null;
       LinkEl = this.props.tag;
-      baseurl = `${basename}`;
+      baseurl = `${basenameStr}`;
     }
     const defaultNamespace = this.state.defaultNamespace;
     const currentNamespace = this.state.currentNamespace;
-    let isValidNamespace = NamespaceStore.getState().namespaces.filter(
+    const isValidNamespace = NamespaceStore.getState().namespaces.filter(
       (ns) => ns.name === currentNamespace
     ).length;
-    let currentNamespaceCardHeader = (
+    const currentNamespaceCardHeader = (
       <div>
         <span className="current-namespace-name">{currentNamespace}</span>
         <span className="current-namespace-default">
@@ -215,7 +272,7 @@ export default class NamespaceDropdown extends Component {
         </span>
       </div>
     );
-    let preferenceSpecificCardHeader = (
+    const preferenceSpecificCardHeader = (
       <div className="preferences-saved-message">
         <span>
           {T.translate('features.FastAction.SetPreferences.success', { entityType: 'Namespace' })}
@@ -310,14 +367,14 @@ export default class NamespaceDropdown extends Component {
             ) : null}
             <div className="namespace-list">
               {this.state.namespaceList
-                .filter((item) => item.name !== currentNamespace)
-                .map((item) => {
-                  let starIcon = defaultNamespace === item.name ? 'icon-star' : 'icon-star-o';
+                .filter((item: INamespace) => item.name !== currentNamespace)
+                .map((item: INamespace) => {
+                  const starIcon = defaultNamespace === item.name ? 'icon-star' : 'icon-star-o';
                   return (
                     <div className="clearfix namespace-container" key={uuidV4()}>
                       <LinkEl
-                        href={baseurl + `ns/${item.name}`}
-                        to={baseurl + `/ns/${item.name}`}
+                        href={`ns/${item.name}`}
+                        to={`/ns/${item.name}`}
                         className="namespace-link"
                       >
                         <span
@@ -354,11 +411,3 @@ export default class NamespaceDropdown extends Component {
     );
   }
 }
-
-NamespaceDropdown.propTypes = {
-  tag: PropTypes.node,
-};
-
-NamespaceDropdown.defaultProps = {
-  tag: null,
-};
