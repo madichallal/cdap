@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014-2017 Cask Data, Inc.
+ * Copyright © 2014-2018 Cask Data, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -59,7 +59,6 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Scopes;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.twill.api.TwillContext;
 
 import java.util.List;
 
@@ -70,23 +69,23 @@ public class StreamHandlerRunnable extends AbstractMasterTwillRunnable {
 
   private Injector injector;
 
-  public StreamHandlerRunnable(String name, String cConfName, String hConfName) {
+  StreamHandlerRunnable(String name, String cConfName, String hConfName) {
     super(name, cConfName, hConfName);
   }
 
   @Override
-  protected Injector doInit(TwillContext context) {
+  protected Injector doInit(String hostname, int instanceId) {
     CConfiguration cConf = getCConfiguration();
     Configuration hConf = getConfiguration();
 
     // Set the host name to the one provided by Twill
-    cConf.set(Constants.Stream.ADDRESS, context.getHost().getHostName());
+    cConf.set(Constants.Stream.ADDRESS, hostname);
     // Set the worker threads to number of cores * 2 available
     cConf.setInt(Constants.Stream.WORKER_THREADS, Runtime.getRuntime().availableProcessors() * 2);
     // Set the instance id
-    cConf.setInt(Constants.Stream.CONTAINER_INSTANCE_ID, context.getInstanceId());
+    cConf.setInt(Constants.Stream.CONTAINER_INSTANCE_ID, instanceId);
 
-    String txClientId = String.format("cdap.service.%s.%d", Constants.Service.STREAMS, context.getInstanceId());
+    String txClientId = String.format("cdap.service.%s.%d", Constants.Service.STREAMS, instanceId);
     injector = createInjector(cConf, hConf, txClientId);
     injector.getInstance(LogAppenderInitializer.class).initialize();
     LoggingContextAccessor.setLoggingContext(new ServiceLoggingContext(NamespaceId.SYSTEM.getNamespace(),

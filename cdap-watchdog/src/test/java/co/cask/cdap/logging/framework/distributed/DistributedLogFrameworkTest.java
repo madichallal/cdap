@@ -33,7 +33,6 @@ import co.cask.cdap.common.logging.LoggingContext;
 import co.cask.cdap.common.logging.ServiceLoggingContext;
 import co.cask.cdap.common.metrics.NoOpMetricsCollectionService;
 import co.cask.cdap.common.namespace.guice.NamespaceClientRuntimeModule;
-import co.cask.cdap.common.test.MockTwillContext;
 import co.cask.cdap.common.utils.Tasks;
 import co.cask.cdap.data.runtime.DataSetsModules;
 import co.cask.cdap.data.runtime.SystemDatasetRuntimeModule;
@@ -207,7 +206,7 @@ public class DistributedLogFrameworkTest {
       new DiscoveryRuntimeModule().getInMemoryModules(),
       new KafkaClientModule(),
       new LocationRuntimeModule().getInMemoryModules(),
-      new DistributedLogFrameworkModule(new MockTwillContext()),
+      new DistributedLogFrameworkModule(0),
       new DataSetsModules().getInMemoryModules(),
       new TransactionModules().getInMemoryModules(),
       new TransactionExecutorModule(),

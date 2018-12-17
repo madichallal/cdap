@@ -21,8 +21,8 @@ import co.cask.cdap.api.metrics.MetricsCollectionService;
 import co.cask.cdap.data2.dataset2.DatasetFramework;
 import co.cask.cdap.logging.framework.AbstractAppenderContext;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import org.apache.tephra.TransactionSystemClient;
-import org.apache.twill.api.TwillContext;
 import org.apache.twill.filesystem.LocationFactory;
 
 /**
@@ -30,25 +30,25 @@ import org.apache.twill.filesystem.LocationFactory;
  */
 public class DistributedAppenderContext extends AbstractAppenderContext {
 
-  private final TwillContext twillContext;
+  /**
+   * Constant for defining the named binding for the instance id field.
+   */
+  public static final String INSTANCE_ID_NAME = "appender.instanceId";
+
+  private final int instanceId;
 
   @Inject
   DistributedAppenderContext(DatasetFramework datasetFramework,
                              TransactionSystemClient txClient,
                              LocationFactory locationFactory,
                              MetricsCollectionService metricsCollectionService,
-                             TwillContext twillContext) {
+                             @Named(INSTANCE_ID_NAME) int instanceId) {
     super(datasetFramework, txClient, locationFactory, metricsCollectionService);
-    this.twillContext = twillContext;
+    this.instanceId = instanceId;
   }
 
   @Override
   public int getInstanceId() {
-    return twillContext.getInstanceId();
-  }
-
-  @Override
-  public int getInstanceCount() {
-    return twillContext.getInstanceCount();
+    return instanceId;
   }
 }

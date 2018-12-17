@@ -63,7 +63,6 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Scopes;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.twill.api.TwillContext;
 
 import java.util.List;
 
@@ -74,20 +73,19 @@ public class DatasetOpExecutorServerTwillRunnable extends AbstractMasterTwillRun
 
   private Injector injector;
 
-  public DatasetOpExecutorServerTwillRunnable(String name, String cConfName, String hConfName) {
+  DatasetOpExecutorServerTwillRunnable(String name, String cConfName, String hConfName) {
     super(name, cConfName, hConfName);
   }
 
   @Override
-  protected Injector doInit(TwillContext context) {
+  protected Injector doInit(String hostname, int instanceId) {
     CConfiguration cConf = getCConfiguration();
     Configuration hConf = getConfiguration();
 
     // Set the host name to the one provided by Twill
-    cConf.set(Constants.Dataset.Executor.ADDRESS, context.getHost().getHostName());
+    cConf.set(Constants.Dataset.Executor.ADDRESS, hostname);
 
-    String txClientId = String.format("cdap.service.%s.%d", Constants.Service.DATASET_EXECUTOR,
-                                      context.getInstanceId());
+    String txClientId = String.format("cdap.service.%s.%d", Constants.Service.DATASET_EXECUTOR, instanceId);
     injector = createInjector(cConf, hConf, txClientId);
 
     injector.getInstance(LogAppenderInitializer.class).initialize();

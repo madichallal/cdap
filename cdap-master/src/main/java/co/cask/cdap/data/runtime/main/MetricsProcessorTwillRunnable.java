@@ -56,7 +56,6 @@ import com.google.inject.Scopes;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.name.Names;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.twill.api.TwillContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,19 +69,18 @@ public final class MetricsProcessorTwillRunnable extends AbstractMasterTwillRunn
 
   private Injector injector;
 
-  public MetricsProcessorTwillRunnable(String name, String cConfName, String hConfName) {
+  MetricsProcessorTwillRunnable(String name, String cConfName, String hConfName) {
     super(name, cConfName, hConfName);
   }
 
   @Override
-  protected Injector doInit(TwillContext context) {
-    getCConfiguration().set(Constants.MetricsProcessor.ADDRESS, context.getHost().getCanonicalHostName());
+  protected Injector doInit(String hostname, int instanceId) {
+    getCConfiguration().set(Constants.MetricsProcessor.ADDRESS, hostname);
     // Set the hostname of the machine so that cConf can be used to start internal services
-    LOG.info("{} Setting host name to {}", name, context.getHost().getCanonicalHostName());
+    LOG.info("{} Setting host name to {}", name, hostname);
 
-    String txClientId = String.format("cdap.service.%s.%d", Constants.Service.METRICS_PROCESSOR,
-                                      context.getInstanceId());
-    injector = createGuiceInjector(getCConfiguration(), getConfiguration(), txClientId, context);
+    String txClientId = String.format("cdap.service.%s.%d", Constants.Service.METRICS_PROCESSOR, instanceId);
+    injector = createGuiceInjector(getCConfiguration(), getConfiguration(), txClientId, instanceId);
 
     injector.getInstance(LogAppenderInitializer.class).initialize();
     LoggingContextAccessor.setLoggingContext(new ServiceLoggingContext(NamespaceId.SYSTEM.getNamespace(),
@@ -98,8 +96,7 @@ public final class MetricsProcessorTwillRunnable extends AbstractMasterTwillRunn
   }
 
   @VisibleForTesting
-  static Injector createGuiceInjector(CConfiguration cConf, Configuration hConf, String txClientId,
-                                      TwillContext twillContext) {
+  static Injector createGuiceInjector(CConfiguration cConf, Configuration hConf, String txClientId, int instanceId) {
     return Guice.createInjector(
       new ConfigModule(cConf, hConf),
       new IOModule(),
@@ -114,7 +111,7 @@ public final class MetricsProcessorTwillRunnable extends AbstractMasterTwillRunn
       new NamespaceClientRuntimeModule().getDistributedModules(),
       new DataFabricModules(txClientId).getDistributedModules(),
       new DataSetsModules().getDistributedModules(),
-      new MetricsProcessorModule(twillContext),
+      new MetricsProcessorModule(instanceId),
       new MetricsProcessorStatusServiceModule(),
       new AuditModule().getDistributedModules(),
       new AuthorizationEnforcementModule().getDistributedModules(),
@@ -131,15 +128,15 @@ public final class MetricsProcessorTwillRunnable extends AbstractMasterTwillRunn
   }
 
   static final class MetricsProcessorModule extends PrivateModule {
-    final Integer instanceId;
+    final int instanceId;
 
-    MetricsProcessorModule(TwillContext twillContext) {
-      this.instanceId = twillContext.getInstanceId();
+    MetricsProcessorModule(int instanceId) {
+      this.instanceId = instanceId;
     }
 
     @Override
     protected void configure() {
-      bind(Integer.class).annotatedWith(Names.named(Constants.Metrics.TWILL_INSTANCE_ID)).toInstance(instanceId);
+      bindConstant().annotatedWith(Names.named(Constants.Metrics.TWILL_INSTANCE_ID)).to(instanceId);
       install(new FactoryModuleBuilder().build(MessagingMetricsProcessorServiceFactory.class));
 
       bind(MessagingMetricsProcessorRuntimeService.class);

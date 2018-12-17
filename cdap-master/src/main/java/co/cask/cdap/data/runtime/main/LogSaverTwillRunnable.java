@@ -1,5 +1,5 @@
 /*
- * Copyright © 2017 Cask Data, Inc.
+ * Copyright © 2017-2018 Cask Data, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -49,7 +49,6 @@ import com.google.inject.Scopes;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.util.ShutdownHookManager;
-import org.apache.twill.api.TwillContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,22 +62,18 @@ public final class LogSaverTwillRunnable extends AbstractMasterTwillRunnable {
 
   private Injector injector;
 
-  public LogSaverTwillRunnable(String name, String cConfName, String hConfName) {
+  LogSaverTwillRunnable(String name, String cConfName, String hConfName) {
     super(name, cConfName, hConfName);
   }
 
   @Override
-  protected Injector doInit(TwillContext context) {
-    name = context.getSpecification().getName();
-    injector = createGuiceInjector(getCConfiguration(), getConfiguration(), context);
+  protected Injector doInit(String hostname, int instanceId) {
+    injector = createGuiceInjector(getCConfiguration(), getConfiguration(), instanceId);
 
     // Register shutdown hook to stop Log Saver before Hadoop Filesystem shuts down
-    ShutdownHookManager.get().addShutdownHook(new Runnable() {
-      @Override
-      public void run() {
-        LOG.info("Shutdown hook triggered.");
-        stop();
-      }
+    ShutdownHookManager.get().addShutdownHook(() -> {
+      LOG.info("Shutdown hook triggered.");
+      stop();
     }, FileSystem.SHUTDOWN_HOOK_PRIORITY + 1);
 
     return injector;
@@ -91,8 +86,8 @@ public final class LogSaverTwillRunnable extends AbstractMasterTwillRunnable {
   }
 
   @VisibleForTesting
-  static Injector createGuiceInjector(CConfiguration cConf, Configuration hConf, TwillContext twillContext) {
-    String txClientId = String.format("cdap.service.%s.%d", Constants.Service.LOGSAVER, twillContext.getInstanceId());
+  static Injector createGuiceInjector(CConfiguration cConf, Configuration hConf, int instanceId) {
+    String txClientId = String.format("cdap.service.%s.%d", Constants.Service.LOGSAVER, instanceId);
     return Guice.createInjector(
       new ConfigModule(cConf, hConf),
       new IOModule(),
@@ -104,7 +99,7 @@ public final class LogSaverTwillRunnable extends AbstractMasterTwillRunnable {
       new NamespaceClientRuntimeModule().getDistributedModules(),
       new DataFabricModules(txClientId).getDistributedModules(),
       new DataSetsModules().getDistributedModules(),
-      new DistributedLogFrameworkModule(twillContext),
+      new DistributedLogFrameworkModule(instanceId),
       new LoggingModules().getDistributedModules(),
       new AuditModule().getDistributedModules(),
       new AuthorizationEnforcementModule().getDistributedModules(),

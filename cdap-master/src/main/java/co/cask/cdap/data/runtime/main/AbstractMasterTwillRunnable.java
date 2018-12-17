@@ -96,7 +96,7 @@ public abstract class AbstractMasterTwillRunnable extends AbstractTwillRunnable 
       LOG.debug("{} cConf {}", name, cConf);
       LOG.debug("{} HBase conf {}", name, hConf);
 
-      Injector injector = doInit(context);
+      Injector injector = doInit(context.getHost().getHostName(), context.getInstanceId());
 
       services = Lists.newArrayList();
 
@@ -192,5 +192,5 @@ public abstract class AbstractMasterTwillRunnable extends AbstractTwillRunnable 
    *
    * @return a guice {@link Injector} for this service.
    */
-  protected abstract Injector doInit(TwillContext context);
+  protected abstract Injector doInit(String hostname, int instanceId);
 }

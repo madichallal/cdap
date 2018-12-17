@@ -39,8 +39,4 @@ public class LocalAppenderContext extends AbstractAppenderContext {
     return 0;
   }
 
-  @Override
-  public int getInstanceCount() {
-    return 1;
-  }
 }

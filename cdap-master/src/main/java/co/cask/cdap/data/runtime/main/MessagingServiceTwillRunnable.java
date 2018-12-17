@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Cask Data, Inc.
+ * Copyright © 2016-2018 Cask Data, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -31,9 +31,6 @@ import co.cask.cdap.logging.appender.LogAppenderInitializer;
 import co.cask.cdap.logging.guice.LoggingModules;
 import co.cask.cdap.messaging.MessagingService;
 import co.cask.cdap.messaging.guice.MessagingServerRuntimeModule;
-import co.cask.cdap.messaging.store.ForwardingTableFactory;
-import co.cask.cdap.messaging.store.TableFactory;
-import co.cask.cdap.messaging.store.hbase.HBaseTableFactory;
 import co.cask.cdap.metrics.guice.MetricsClientRuntimeModule;
 import co.cask.cdap.proto.id.NamespaceId;
 import co.cask.cdap.security.auth.context.AuthenticationContextModules;
@@ -43,20 +40,14 @@ import com.google.common.util.concurrent.Service;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.twill.api.TwillContext;
 import org.apache.twill.api.TwillRunnable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.List;
-import javax.annotation.Nullable;
 
 /**
  * A {@link TwillRunnable} for messaging system.
  */
 public class MessagingServiceTwillRunnable extends AbstractMasterTwillRunnable {
-  private static final Logger LOG = LoggerFactory.getLogger(MessagingServiceTwillRunnable.class);
 
   private Injector injector;
 
@@ -73,10 +64,10 @@ public class MessagingServiceTwillRunnable extends AbstractMasterTwillRunnable {
   }
 
   @Override
-  protected Injector doInit(TwillContext context) {
+  protected Injector doInit(String hostname, int instanceId) {
     CConfiguration cConf = getCConfiguration();
-    cConf.set(Constants.MessagingSystem.HTTP_SERVER_BIND_ADDRESS, context.getHost().getHostName());
-    cConf.setInt(Constants.MessagingSystem.CONTAINER_INSTANCE_ID, context.getInstanceId());
+    cConf.set(Constants.MessagingSystem.HTTP_SERVER_BIND_ADDRESS, hostname);
+    cConf.setInt(Constants.MessagingSystem.CONTAINER_INSTANCE_ID, instanceId);
 
     injector = createInjector(cConf, getConfiguration());
     injector.getInstance(LogAppenderInitializer.class).initialize();

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014-2017 Cask Data, Inc.
+ * Copyright © 2014-2018 Cask Data, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -53,7 +53,6 @@ import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.tephra.distributed.TransactionService;
-import org.apache.twill.api.TwillContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,17 +66,17 @@ public class TransactionServiceTwillRunnable extends AbstractMasterTwillRunnable
 
   private Injector injector;
 
-  public TransactionServiceTwillRunnable(String name, String cConfName, String hConfName) {
+  TransactionServiceTwillRunnable(String name, String cConfName, String hConfName) {
     super(name, cConfName, hConfName);
   }
 
   @Override
-  protected Injector doInit(TwillContext context) {
-    getCConfiguration().set(Constants.Transaction.Container.ADDRESS, context.getHost().getCanonicalHostName());
+  protected Injector doInit(String hostname, int instanceId) {
+    getCConfiguration().set(Constants.Transaction.Container.ADDRESS, hostname);
     // Set the hostname of the machine so that cConf can be used to start internal services
-    LOG.info("{} Setting host name to {}", name, context.getHost().getCanonicalHostName());
+    LOG.info("{} Setting host name to {}", name, hostname);
 
-    String txClientId = String.format("cdap.service.%s.%d", Constants.Service.TRANSACTION, context.getInstanceId());
+    String txClientId = String.format("cdap.service.%s.%d", Constants.Service.TRANSACTION, instanceId);
     injector = createGuiceInjector(getCConfiguration(), getConfiguration(), txClientId);
     injector.getInstance(LogAppenderInitializer.class).initialize();
     LoggingContextAccessor.setLoggingContext(new ServiceLoggingContext(NamespaceId.SYSTEM.getNamespace(),

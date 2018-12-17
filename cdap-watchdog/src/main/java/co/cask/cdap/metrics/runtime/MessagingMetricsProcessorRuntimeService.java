@@ -41,7 +41,7 @@ public final class MessagingMetricsProcessorRuntimeService extends ResourceBalan
 
   private final MessagingMetricsProcessorServiceFactory factory;
   private final MetricsCollectionService metricsCollectionService;
-  private final Integer instanceId;
+  private final int instanceId;
 
   @Inject
   MessagingMetricsProcessorRuntimeService(CConfiguration conf,
@@ -50,7 +50,7 @@ public final class MessagingMetricsProcessorRuntimeService extends ResourceBalan
                                           DiscoveryServiceClient discoveryServiceClient,
                                           MetricsCollectionService metricsCollectionService,
                                           MessagingMetricsProcessorServiceFactory metricsProcessorFactory,
-                                          @Named(Constants.Metrics.TWILL_INSTANCE_ID) Integer instanceId) {
+                                          @Named(Constants.Metrics.TWILL_INSTANCE_ID) int instanceId) {
     super(SERVICE_NAME, conf.getInt(Constants.Metrics.MESSAGING_TOPIC_NUM),
           zkClient, discoveryService, discoveryServiceClient);
     this.factory = metricsProcessorFactory;

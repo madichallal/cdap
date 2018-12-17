@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014-2017 Cask Data, Inc.
+ * Copyright © 2014-2018 Cask Data, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -54,8 +54,6 @@ import co.cask.cdap.security.impersonation.RemoteUGIProvider;
 import co.cask.cdap.security.impersonation.UGIProvider;
 import co.cask.cdap.security.spi.authorization.PrivilegesManager;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
@@ -73,7 +71,6 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.MRJobConfig;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.tez.dag.api.TezConfiguration;
-import org.apache.twill.api.TwillContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -97,6 +94,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 /**
@@ -105,24 +103,18 @@ import javax.annotation.Nullable;
  */
 public class ExploreServiceTwillRunnable extends AbstractMasterTwillRunnable {
 
-  public static final String EXPLORE_ARCHIVE_NAME = "explore.archive.zip";
+  static final String EXPLORE_ARCHIVE_NAME = "explore.archive.zip";
 
   private static final Logger LOG = LoggerFactory.getLogger(ExploreServiceTwillRunnable.class);
-  private static final Function<URL, String> URL_TO_PATH = new Function<URL, String>() {
-    @Override
-    public String apply(URL url) {
-      return url.getPath();
-    }
-  };
 
   private Injector injector;
 
-  public ExploreServiceTwillRunnable(String name, String cConfName, String hConfName) {
+  ExploreServiceTwillRunnable(String name, String cConfName, String hConfName) {
     super(name, cConfName, hConfName);
   }
 
   @Override
-  protected Injector doInit(TwillContext context) {
+  protected Injector doInit(String hostname, int instanceId) {
     setupHive();
 
     CConfiguration cConf = getCConfiguration();
@@ -134,9 +126,9 @@ public class ExploreServiceTwillRunnable extends AbstractMasterTwillRunnable {
     addResource(hConf, "tez-site.xml");
 
     // Set the host name to the one provided by Twill
-    cConf.set(Constants.Explore.SERVER_ADDRESS, context.getHost().getHostName());
+    cConf.set(Constants.Explore.SERVER_ADDRESS, hostname);
     String txClientId = String.format("cdap.service.%s.%d", Constants.Service.EXPLORE_HTTP_USER_SERVICE,
-                                      context.getInstanceId());
+                                      instanceId);
 
     // NOTE: twill client will try to load all the classes present here - including hive classes but it
     // will fail since Hive classes are not in master classpath, and ignore those classes silently
@@ -256,26 +248,23 @@ public class ExploreServiceTwillRunnable extends AbstractMasterTwillRunnable {
     // These dependency files need to be copied over to hive job container.
     // The path are prefixed with "file:" in order to work with Hive started MR job.
     System.setProperty(HiveConf.ConfVars.HIVEAUXJARS.toString(),
-                       Joiner.on(',').join(Iterables.transform(hiveExtraJars.values(), Functions.toStringFunction())));
+                       hiveExtraJars.values().stream().map(URL::toString).collect(Collectors.joining(",")));
     LOG.debug("Setting {} to {}", HiveConf.ConfVars.HIVEAUXJARS.toString(),
               System.getProperty(HiveConf.ConfVars.HIVEAUXJARS.toString()));
 
     // These dependency files need to be copied over to spark container
+
     System.setProperty(BaseHiveExploreService.SPARK_YARN_DIST_FILES,
-                       Joiner.on(',').join(Iterables.transform(hiveExtraJars.values(), URL_TO_PATH)));
+                       hiveExtraJars.values().stream().map(URL::getPath).collect(Collectors.joining(",")));
     LOG.debug("Setting {} to {}", BaseHiveExploreService.SPARK_YARN_DIST_FILES,
               System.getProperty(BaseHiveExploreService.SPARK_YARN_DIST_FILES));
 
     // Rewrite the yarn-site.xml, mapred-site.xml, hive-site.xml and tez-site.xml for classpath manipulation
     // The jar files are localized to the container local directory of the task (MR or Spark or Tez),
     // Hence the extra classpath is based on $PWD/
-    Iterable<String> extraClassPath = Iterables.concat(
-      Iterables.transform(hiveExtraJars.keySet(), new Function<String, String>() {
-        @Override
-        public String apply(String name) {
-          return "$PWD/" + name;
-        }
-      }), Collections.singleton("$PWD/*"));
+    List<String> extraClassPath = hiveExtraJars
+      .keySet().stream().map(name -> "$PWD/" + name).collect(Collectors.toList());
+    extraClassPath.add("$PWD/*");
 
     rewriteConfigClasspath("yarn-site.xml", YarnConfiguration.YARN_APPLICATION_CLASSPATH,
                            Joiner.on(",").join(YarnConfiguration.DEFAULT_YARN_APPLICATION_CLASSPATH),

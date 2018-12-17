@@ -35,11 +35,6 @@ public abstract class AppenderContext extends LoggerContext implements Transacti
   public abstract int getInstanceId();
 
   /**
-   * Returns the total number of log framework instances running.
-   */
-  public abstract int getInstanceCount();
-
-  /**
    * Returns a {@link DatasetManager} for interacting with the dataset system.
    */
   public abstract DatasetManager getDatasetManager();
@@ -51,7 +46,6 @@ public abstract class AppenderContext extends LoggerContext implements Transacti
 
   /**
    * Returns a {@link MetricsContext} for emitting metrics.
-   * @return
    */
   public abstract MetricsContext getMetricsContext();
 }

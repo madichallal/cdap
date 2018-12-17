@@ -1,5 +1,5 @@
 /*
- * Copyright © 2017 Cask Data, Inc.
+ * Copyright © 2017-2018 Cask Data, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -52,7 +52,6 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Scopes;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.twill.api.TwillContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,17 +65,17 @@ public class MetricsTwillRunnable extends AbstractMasterTwillRunnable {
 
   private Injector injector;
 
-  public MetricsTwillRunnable(String name, String cConfName, String hConfName) {
+  MetricsTwillRunnable(String name, String cConfName, String hConfName) {
     super(name, cConfName, hConfName);
   }
 
   @Override
-  protected Injector doInit(TwillContext context) {
+  protected Injector doInit(String hostname, int instanceId) {
     // Set the hostname of the machine so that cConf can be used to start internal services
-    getCConfiguration().set(Constants.Metrics.ADDRESS, context.getHost().getCanonicalHostName());
-    LOG.info("{} Setting host name to {}", name, context.getHost().getCanonicalHostName());
+    getCConfiguration().set(Constants.Metrics.ADDRESS, hostname);
+    LOG.info("{} Setting host name to {}", name, hostname);
 
-    String txClientId = String.format("cdap.service.%s.%d", Constants.Service.METRICS, context.getInstanceId());
+    String txClientId = String.format("cdap.service.%s.%d", Constants.Service.METRICS, instanceId);
     injector = createGuiceInjector(getCConfiguration(), getConfiguration(), txClientId);
     injector.getInstance(LogAppenderInitializer.class).initialize();
 

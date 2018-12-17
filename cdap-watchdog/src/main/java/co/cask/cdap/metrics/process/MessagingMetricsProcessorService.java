@@ -32,7 +32,6 @@ import co.cask.cdap.common.io.BinaryDecoder;
 import co.cask.cdap.common.io.DatumReader;
 import co.cask.cdap.common.logging.LogSamplers;
 import co.cask.cdap.common.logging.Loggers;
-import co.cask.cdap.data2.dataset2.DatasetFramework;
 import co.cask.cdap.internal.io.DatumReaderFactory;
 import co.cask.cdap.internal.io.SchemaGenerator;
 import co.cask.cdap.messaging.MessageFetcher;
@@ -110,7 +109,7 @@ public class MessagingMetricsProcessorService extends AbstractExecutionThreadSer
                                    MetricStore metricStore,
                                    @Assisted Set<Integer> topicNumbers,
                                    @Assisted MetricsContext metricsContext,
-                                   @Assisted Integer instanceId) {
+                                   @Assisted int instanceId) {
     this(cConf, metricDatasetFactory, messagingService,
          schemaGenerator, readerFactory, metricStore, topicNumbers, metricsContext, 1000, instanceId);
   }
