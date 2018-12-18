@@ -93,7 +93,7 @@ class AppDrawer extends React.PureComponent<IAppDrawerProps> {
             <ListItemText
               disableTypography
               classes={{ root: classes.listItemText }}
-              primary="Control Center"
+              primary={Theme.featureNames.controlCenter}
             />
           </ListItemLink>
         </List>
@@ -101,8 +101,8 @@ class AppDrawer extends React.PureComponent<IAppDrawerProps> {
           <DrawerFeatureLink
             featureName={Theme.featureNames.pipelines}
             featureFlagName={Theme.showPipelines}
-            featureUrl={`/pipelines/ns/${namespace}`}
-            isAngular={true}
+            featureUrl={`/ns/${namespace}/pipelines`}
+            componentDidNavigate={this.props.componentDidNavigate}
           />
           <DrawerFeatureLink
             featureName={Theme.featureNames.dataPrep}
@@ -112,34 +112,34 @@ class AppDrawer extends React.PureComponent<IAppDrawerProps> {
           />
           <DrawerFeatureLink
             featureUrl={`/ns/${namespace}/experiments`}
-            featureName={Theme.featureNames.analytics}
             featureFlagName={Theme.showAnalytics}
+            featureName={Theme.featureNames.analytics}
             componentDidNavigate={this.props.componentDidNavigate}
           />
           <DrawerFeatureLink
             featureUrl={`/ns/${namespace}/rulesengine`}
-            featureName={Theme.featureNames.rulesEngine}
             featureFlagName={Theme.showRulesEngine}
+            featureName={Theme.featureNames.rulesEngine}
             componentDidNavigate={this.props.componentDidNavigate}
           />
           <DrawerFeatureLink
-            featureName={Theme.featureNames.metadata}
-            featureFlagName={Theme.showMetadata}
             featureUrl={`/metadata/ns/${namespace}`}
+            featureFlagName={Theme.showMetadata}
+            featureName={Theme.featureNames.metadata}
             isAngular={true}
           />
         </List>
         <List component="nav" dense={true}>
           <ListItemLink
             component={isNativeLink ? 'a' : Link}
-            href="/administration/configuration"
-            to="/cdap/administration/configuration"
+            href="/cdap/administration/configuration"
+            to="administration/configuration"
             onClick={componentDidNavigate}
           >
             <ListItemText
               disableTypography
               classes={{ root: classes.listItemText }}
-              primary="Project Admin"
+              primary={Theme.featureNames.projectAdmin}
             />
           </ListItemLink>
         </List>

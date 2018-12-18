@@ -20,6 +20,8 @@ import T from 'i18n-react';
 import { getModeWithCloudProvider } from 'components/Header/ProductDropdown/helper';
 import Footer from 'components/Footer';
 import { Theme } from 'services/ThemeHelper';
+import IconSVG from 'components/IconSVG';
+import Heading, { HeadingTypes } from 'components/Heading';
 
 require('./AboutPageModal.scss');
 
@@ -43,7 +45,7 @@ const AboutPageModal: React.SFC<IAboutPageModalProps> = ({ cdapVersion, isOpen, 
     <Modal isOpen={isOpen} toggle={toggle} size="md" className="about-page-modal" backdrop="static">
       <ModalBody>
         <div className="close-section float-right" onClick={toggle}>
-          <span className="fa fa-2x fa-times" />
+          <Heading type={HeadingTypes.h3} label={<IconSVG name="icon-close" />} />
         </div>
         <div className="about-title">
           <div className="cdap-logo-with-version">

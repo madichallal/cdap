@@ -87,21 +87,23 @@ class HubButton extends React.PureComponent<IHubButtonProps, IHubButtonState> {
   public render() {
     const { classes } = this.props;
     return (
-      <Button className={classnames(classes.buttonLink)} onClick={this.onClickHandler.bind(this)}>
-        <div>
-          <span
-            className={classnames('cask-market-button', this.props.className, {
-              active: this.state.showMarketPlace,
-            })}
-          >
-            {this.props.children}
-          </span>
-        </div>
+      <React.Fragment>
+        <Button className={classnames(classes.buttonLink)} onClick={this.onClickHandler.bind(this)}>
+          <div>
+            <span
+              className={classnames('cask-market-button', this.props.className, {
+                active: this.state.showMarketPlace,
+              })}
+            >
+              {this.props.children}
+            </span>
+          </div>
+        </Button>
         <PlusButtonModal
           isOpen={this.state.showMarketPlace}
           onCloseHandler={this.onClickHandler.bind(this)}
         />
-      </Button>
+      </React.Fragment>
     );
   }
 }

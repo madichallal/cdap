@@ -128,7 +128,7 @@ class AppToolbar extends React.PureComponent<IAppToolbarProps, IAppToolbarState>
             className={classnames(classes.buttonLink)}
             href={`/cdap/administration`}
           >
-            System Admin
+            {Theme.featureNames.systemAdmin}
           </Button>
         </div>
         <div onClick={this.openSettings}>
@@ -157,22 +157,22 @@ class AppToolbar extends React.PureComponent<IAppToolbarProps, IAppToolbarState>
             </a>
           </MenuItem>
           <If condition={Theme.showAboutProductModal === true}>
-            <React.Fragment>
-              <MenuItem onClick={this.toggleAboutPage}>
-                <a>
-                  {T.translate('features.Navbar.ProductDropdown.aboutLabel', {
-                    productName: Theme.productName,
-                  })}
-                </a>
-              </MenuItem>
-              <AboutPageModal
-                cdapVersion={cdapVersion}
-                isOpen={this.state.aboutPageOpen}
-                toggle={this.toggleAboutPage}
-              />
-            </React.Fragment>
+            <MenuItem onClick={this.toggleAboutPage}>
+              <a>
+                {T.translate('features.Navbar.ProductDropdown.aboutLabel', {
+                  productName: Theme.productName,
+                })}
+              </a>
+            </MenuItem>
           </If>
         </Menu>
+        <If condition={Theme.showAboutProductModal === true}>
+          <AboutPageModal
+            cdapVersion={cdapVersion}
+            isOpen={this.state.aboutPageOpen}
+            toggle={this.toggleAboutPage}
+          />
+        </If>
       </Toolbar>
     );
   }
