@@ -48,7 +48,6 @@ import com.google.gson.Gson;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
@@ -59,8 +58,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
-import javax.annotation.Nullable;
 
 /**
  * Tests whether admin operations work in program contexts.
@@ -71,7 +68,6 @@ public class AdminAppTestRun extends TestFrameworkTestBase {
   public static final TestConfiguration CONFIG = new TestConfiguration(Constants.Explore.EXPLORE_ENABLED, false);
 
   private static final Gson GSON = new Gson();
-  private static final Type MAP_TYPE = new TypeToken<Map<String, String>>() { }.getType();
   private static final ArtifactId ADMIN_APP_ARTIFACT = NamespaceId.DEFAULT.artifact("admin-app", "1.0.0");
   private static final ArtifactSummary ADMIN_ARTIFACT_SUMMARY = new ArtifactSummary(ADMIN_APP_ARTIFACT.getArtifact(),
                                                                                     ADMIN_APP_ARTIFACT.getVersion());
@@ -201,53 +197,60 @@ public class AdminAppTestRun extends TestFrameworkTestBase {
 
     // Start the service
     ServiceManager serviceManager = appManager.getServiceManager(AdminApp.SERVICE_NAME).start();
+
     String namespaceX = "x";
-    ArtifactId pluginArtifactId = new NamespaceId(namespaceX).artifact("r1", "1.0.0");
-
     try {
-      getNamespaceAdmin().create(new NamespaceMeta.Builder().setName(namespaceX).build());
-
       URI serviceURI = serviceManager.getServiceURL(10, TimeUnit.SECONDS).toURI();
 
       // dataset nn should not exist
-      executeInNamespaces(() -> HttpRequest.get(serviceURI.resolve("exists/nn").toURL()), namespaceX, 200, "false");
+      HttpResponse response = HttpRequests.execute(HttpRequest.get(serviceURI.resolve("exists/nn").toURL()).build());
+      Assert.assertEquals(200, response.getResponseCode());
+      Assert.assertEquals("false", response.getResponseBodyAsString());
 
-      // create nn as a table in both namespaces
-      executeInNamespaces(() -> HttpRequest.put(serviceURI.resolve("create/nn/table").toURL()), namespaceX, 200);
+      // create nn as a table
+      response = HttpRequests.execute(HttpRequest.put(serviceURI.resolve("create/nn/table").toURL()).build());
+      Assert.assertEquals(200, response.getResponseCode());
 
       // now nn should exist
-      executeInNamespaces(() -> HttpRequest.get(serviceURI.resolve("exists/nn").toURL()), namespaceX, 200, "true");
+      response = HttpRequests.execute(HttpRequest.get(serviceURI.resolve("exists/nn").toURL()).build());
+      Assert.assertEquals(200, response.getResponseCode());
+      Assert.assertEquals("true", response.getResponseBodyAsString());
 
       // create it again as a fileset -> should fail with conflict
-      executeInNamespaces(() -> HttpRequest.put(serviceURI.resolve("create/nn/fileSet").toURL()), namespaceX, 409);
+      response = HttpRequests.execute(HttpRequest.put(serviceURI.resolve("create/nn/fileSet").toURL()).build());
+      Assert.assertEquals(409, response.getResponseCode());
 
       // get the type for xx -> not found
-      executeInNamespaces(() -> HttpRequest.get(serviceURI.resolve("type/xx").toURL()), namespaceX, 404);
+      response = HttpRequests.execute(HttpRequest.get(serviceURI.resolve("type/xx").toURL()).build());
+      Assert.assertEquals(404, response.getResponseCode());
 
       // get the type for nn -> table
-      executeInNamespaces(() -> HttpRequest.get(serviceURI.resolve("type/nn").toURL()), namespaceX, 200, "table");
+      response = HttpRequests.execute(HttpRequest.get(serviceURI.resolve("type/nn").toURL()).build());
+      Assert.assertEquals(200, response.getResponseCode());
+      Assert.assertEquals("table", response.getResponseBodyAsString());
 
       // update xx's properties -> should get not-found
       Map<String, String> nnProps = TableProperties.builder().setTTL(1000L).build().getProperties();
-      executeInNamespaces(() -> HttpRequest.put(serviceURI.resolve("update/xx").toURL()).withBody(GSON.toJson(nnProps)),
-                          namespaceX, 404);
+      response = HttpRequests.execute(HttpRequest.put(serviceURI.resolve("update/xx").toURL())
+                                        .withBody(GSON.toJson(nnProps)).build());
+      Assert.assertEquals(404, response.getResponseCode());
 
       // update nn's properties
-      executeInNamespaces(() -> HttpRequest.put(serviceURI.resolve("update/nn").toURL()).withBody(GSON.toJson(nnProps)),
-                          namespaceX, 200);
+      response = HttpRequests.execute(HttpRequest.put(serviceURI.resolve("update/nn").toURL())
+                                        .withBody(GSON.toJson(nnProps)).build());
+      Assert.assertEquals(200, response.getResponseCode());
 
       // get properties for xx -> not found
-      executeInNamespaces(() -> HttpRequest.get(serviceURI.resolve("props/xx").toURL()), namespaceX, 404);
+      response = HttpRequests.execute(HttpRequest.get(serviceURI.resolve("props/xx").toURL()).build());
+      Assert.assertEquals(404, response.getResponseCode());
 
       // get properties for nn and validate
-      executeInNamespaces(() -> HttpRequest.get(serviceURI.resolve("props/nn").toURL()), namespaceX,
-                          response -> {
-                            Assert.assertEquals(200, response.getResponseCode());
-
-                            Map<String, String> returnedProps = GSON.fromJson(response.getResponseBodyAsString(),
-                                                                              MAP_TYPE);
-                            Assert.assertEquals(nnProps, returnedProps);
-                          });
+      response = HttpRequests.execute(HttpRequest.get(serviceURI.resolve("props/nn").toURL()).build());
+      Assert.assertEquals(200, response.getResponseCode());
+      Map<String, String> returnedProps = GSON.fromJson(response.getResponseBodyAsString(),
+                                                        new TypeToken<Map<String, String>>() {
+                                                        }.getType());
+      Assert.assertEquals(nnProps, returnedProps);
 
       // write some data to the table
       DataSetManager<Table> nnManager = getDataset("nn");
@@ -260,49 +263,56 @@ public class AdminAppTestRun extends TestFrameworkTestBase {
       nnManager.flush();
 
       // truncate xx -> not found
-      executeInNamespaces(() -> HttpRequest.post(serviceURI.resolve("truncate/xx").toURL()), namespaceX, 404);
+      response = HttpRequests.execute(HttpRequest.post(serviceURI.resolve("truncate/xx").toURL()).build());
+      Assert.assertEquals(404, response.getResponseCode());
 
       // truncate nn
-      executeInNamespaces(() -> HttpRequest.post(serviceURI.resolve("truncate/nn").toURL()), namespaceX, 200);
+      response = HttpRequests.execute(HttpRequest.post(serviceURI.resolve("truncate/nn").toURL()).build());
+      Assert.assertEquals(200, response.getResponseCode());
 
       // validate table is empty
       Assert.assertTrue(nnManager.get().get(new Get("x")).isEmpty());
       nnManager.flush();
 
       // delete nn
-      executeInNamespaces(() -> HttpRequest.delete(serviceURI.resolve("delete/nn").toURL()), namespaceX, 200);
+      response = HttpRequests.execute(HttpRequest.delete(serviceURI.resolve("delete/nn").toURL()).build());
+      Assert.assertEquals(200, response.getResponseCode());
 
       // delete again -> not found
-      executeInNamespaces(() -> HttpRequest.delete(serviceURI.resolve("delete/nn").toURL()), namespaceX, 404);
+      response = HttpRequests.execute(HttpRequest.delete(serviceURI.resolve("delete/nn").toURL()).build());
+      Assert.assertEquals(404, response.getResponseCode());
 
       // delete xx which never existed -> not found
-      executeInNamespaces(() -> HttpRequest.delete(serviceURI.resolve("delete/xx").toURL()), namespaceX, 404);
+      response = HttpRequests.execute(HttpRequest.delete(serviceURI.resolve("delete/xx").toURL()).build());
+      Assert.assertEquals(404, response.getResponseCode());
 
       // exists should now return false for nn
-      executeInNamespaces(() -> HttpRequest.get(serviceURI.resolve("exists/nn").toURL()), namespaceX, 200, "false");
+      response = HttpRequests.execute(HttpRequest.get(serviceURI.resolve("exists/nn").toURL()).build());
+      Assert.assertEquals(200, response.getResponseCode());
+      Assert.assertEquals("false", response.getResponseBodyAsString());
 
       Assert.assertNull(getDataset("nn").get());
-      Assert.assertNull(getDataset(new NamespaceId(namespaceX).dataset("nn")).get());
 
       // test Admin.namespaceExists()
-      HttpRequest request = HttpRequest.get(serviceURI.resolve("plugins").toURL())
-        .addHeader(AdminApp.NAMESPACE_HEADER, "y").build();
-      HttpResponse response = HttpRequests.execute(request);
+      HttpRequest request = HttpRequest.get(serviceURI.resolve("namespaces/y/plugins").toURL()).build();
+      response = HttpRequests.execute(request);
       Assert.assertEquals(404, response.getResponseCode());
 
       // test ArtifactManager.listArtifacts()
+      ArtifactId pluginArtifactId = new NamespaceId(namespaceX).artifact("r1", "1.0.0");
+      getNamespaceAdmin().create(new NamespaceMeta.Builder().setName(namespaceX).build());
+
       // add a plugin artifact to namespace X
       addPluginArtifact(pluginArtifactId, ADMIN_APP_ARTIFACT, DummyPlugin.class);
       // no plugins should be listed in the default namespace, but the app artifact should
-      request = HttpRequest.get(serviceURI.resolve("plugins").toURL()).build();
+      request = HttpRequest.get(serviceURI.resolve("namespaces/default/plugins").toURL()).build();
       response = HttpRequests.execute(request);
       Assert.assertEquals(200, response.getResponseCode());
       Type setType = new TypeToken<Set<ArtifactSummary>>() { }.getType();
       Assert.assertEquals(Collections.singleton(ADMIN_ARTIFACT_SUMMARY),
                           GSON.fromJson(response.getResponseBodyAsString(), setType));
       // the plugin should be listed in namespace X
-      request = HttpRequest.get(serviceURI.resolve("plugins").toURL())
-        .addHeader(AdminApp.NAMESPACE_HEADER, namespaceX).build();
+      request = HttpRequest.get(serviceURI.resolve("namespaces/x/plugins").toURL()).build();
       response = HttpRequests.execute(request);
       Assert.assertEquals(200, response.getResponseCode());
       ArtifactSummary expected = new ArtifactSummary(pluginArtifactId.getArtifact(), pluginArtifactId.getVersion());
@@ -310,7 +320,6 @@ public class AdminAppTestRun extends TestFrameworkTestBase {
 
     } finally {
       serviceManager.stop();
-
       getNamespaceAdmin().delete(new NamespaceId(namespaceX));
     }
   }
@@ -359,39 +368,5 @@ public class AdminAppTestRun extends TestFrameworkTestBase {
     Assert.assertNull(countsManager.get().read("you"));
     Assert.assertNull(countsManager.get().read("me"));
     countsManager.flush();
-  }
-
-  private void executeInNamespaces(RequestSupplier requestSupplier, String namespace,
-                                   int expectedCode) throws Exception {
-    executeInNamespaces(requestSupplier, namespace, expectedCode, null);
-  }
-
-  private void executeInNamespaces(RequestSupplier requestSupplier, String namespace,
-                                   int expectedCode, @Nullable String expectedResponse) throws Exception {
-    executeInNamespaces(requestSupplier, namespace, response -> {
-      Assert.assertEquals(expectedCode, response.getResponseCode());
-      if (expectedResponse != null) {
-        Assert.assertEquals(expectedResponse, response.getResponseBodyAsString());
-      }
-    });
-  }
-
-  // execute an HTTP request once without setting a namespace header and once with setting it
-  private void executeInNamespaces(RequestSupplier requestSupplier, String namespace,
-                                   Consumer<HttpResponse> responseConsumer) throws Exception {
-    HttpRequest request = requestSupplier.get().build();
-    HttpResponse response = HttpRequests.execute(request);
-    responseConsumer.accept(response);
-
-    request = requestSupplier.get().addHeader(AdminApp.NAMESPACE_HEADER, namespace).build();
-    response = HttpRequests.execute(request);
-    responseConsumer.accept(response);
-  }
-
-  /**
-   * Used instead of a Supplier so that throwing exceptions is allowed
-   */
-  private interface RequestSupplier {
-    HttpRequest.Builder get() throws Exception;
   }
 }

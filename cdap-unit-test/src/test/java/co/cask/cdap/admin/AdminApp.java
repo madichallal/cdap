@@ -80,7 +80,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 
 public class AdminApp extends AbstractApplication {
-  public static final String APP_NAME = "AdminApp";
+
   public static final String FLOW_NAME = "AdminFlow";
   public static final String MAPREDUCE_NAME = "AdminMapReduce";
   public static final String SPARK_NAME = "AdminSpark";
@@ -88,11 +88,9 @@ public class AdminApp extends AbstractApplication {
   public static final String SERVICE_NAME = "AdminService";
   public static final String WORKER_NAME = "AdminWorker";
   public static final String WORKFLOW_NAME = "AdminWorkflow";
-  public static final String NAMESPACE_HEADER = "X-Namespace";
 
   @Override
   public void configure() {
-    setName(APP_NAME);
     addStream("events");
     addFlow(new AdminFlow());
     addMapReduce(new AdminMapReduce());
@@ -105,21 +103,32 @@ public class AdminApp extends AbstractApplication {
       protected void configure() {
         setName(SERVICE_NAME);
         addHandler(new DatasetAdminHandler());
-        addHandler(new PluginAdminHandler());
+        addHandler(new CrossNamespaceHandler());
       }
     });
   }
 
-  public static class PluginAdminHandler extends AbstractHttpServiceHandler {
+  /**
+   * Handler to test cross namespace methods.
+   */
+  public static class CrossNamespaceHandler extends AbstractHttpServiceHandler {
 
     @GET
-    @Path("plugins")
-    public void getPlugins(HttpServiceRequest request, HttpServiceResponder responder) throws IOException {
+    @Path("/namespaces/{namespace}")
+    public void getNamespace(HttpServiceRequest request, HttpServiceResponder responder,
+                             @PathParam("namespace") String namespace) throws IOException {
       Admin admin = getContext().getAdmin();
-      String namespace = request.getHeader(NAMESPACE_HEADER);
-      if (namespace == null) {
-        namespace = getContext().getNamespace();
+      if (!admin.namespaceExists(namespace)) {
+        responder.sendError(404, String.format("namespace '%s' not found.", namespace));
+        return;
       }
+    }
+
+    @GET
+    @Path("/namespaces/{namespace}/plugins")
+    public void getPlugins(HttpServiceRequest request, HttpServiceResponder responder,
+                           @PathParam("namespace") String namespace) throws IOException {
+      Admin admin = getContext().getAdmin();
       if (!admin.namespaceExists(namespace)) {
         responder.sendError(404, String.format("namespace '%s' not found.", namespace));
         return;
@@ -135,19 +144,12 @@ public class AdminApp extends AbstractApplication {
 
     private static final Gson GSON = new Gson();
 
-    // namespace can be set as a request header
-    // if none is sent, the namespace that the program is running in will be used
-    String getNamespace(HttpServiceRequest request) {
-      String namespace = request.getHeader(NAMESPACE_HEADER);
-      return namespace != null ? namespace : getContext().getNamespace();
-    }
-
     @GET
     @Path("exists/{dataset}")
     public void exists(HttpServiceRequest request, HttpServiceResponder responder,
                        @PathParam("dataset") String dataset) throws DatasetManagementException {
       Admin admin = getContext().getAdmin();
-      responder.sendString(Boolean.toString(admin.datasetExists(getNamespace(request), dataset)));
+      responder.sendString(Boolean.toString(admin.datasetExists(dataset)));
     }
 
     @GET
@@ -155,12 +157,11 @@ public class AdminApp extends AbstractApplication {
     public void type(HttpServiceRequest request, HttpServiceResponder responder,
                      @PathParam("dataset") String dataset) throws DatasetManagementException {
       Admin admin = getContext().getAdmin();
-      String namespace = getNamespace(request);
-      if (!admin.datasetExists(namespace, dataset)) {
+      if (!admin.datasetExists(dataset)) {
         responder.sendStatus(404);
         return;
       }
-      responder.sendString(admin.getDatasetType(namespace, dataset));
+      responder.sendString(admin.getDatasetType(dataset));
     }
 
     @GET
@@ -168,12 +169,11 @@ public class AdminApp extends AbstractApplication {
     public void properties(HttpServiceRequest request, HttpServiceResponder responder,
                            @PathParam("dataset") String dataset) throws DatasetManagementException {
       Admin admin = getContext().getAdmin();
-      String namespace = getNamespace(request);
-      if (!admin.datasetExists(namespace, dataset)) {
+      if (!admin.datasetExists(dataset)) {
         responder.sendStatus(404);
         return;
       }
-      responder.sendJson(200, admin.getDatasetProperties(namespace, dataset).getProperties());
+      responder.sendJson(200, admin.getDatasetProperties(dataset).getProperties());
     }
 
     @PUT
@@ -184,9 +184,8 @@ public class AdminApp extends AbstractApplication {
 
       DatasetProperties datasetProps = parseBodyAsProps(request);
       Admin admin = getContext().getAdmin();
-      String namespace = getNamespace(request);
       try {
-        admin.createDataset(namespace, dataset, type, datasetProps);
+        admin.createDataset(dataset, type, datasetProps);
         responder.sendStatus(200);
       } catch (InstanceConflictException e) {
         responder.sendStatus(409);
@@ -201,9 +200,8 @@ public class AdminApp extends AbstractApplication {
 
       DatasetProperties datasetProps = parseBodyAsProps(request);
       Admin admin = getContext().getAdmin();
-      String namespace = getNamespace(request);
       try {
-        admin.updateDataset(namespace, dataset, datasetProps);
+        admin.updateDataset(dataset, datasetProps);
         responder.sendStatus(200);
       } catch (InstanceNotFoundException e) {
         responder.sendStatus(404);
@@ -217,9 +215,8 @@ public class AdminApp extends AbstractApplication {
       throws DatasetManagementException {
 
       Admin admin = getContext().getAdmin();
-      String namespace = getNamespace(request);
       try {
-        admin.truncateDataset(namespace, dataset);
+        admin.truncateDataset(dataset);
         responder.sendStatus(200);
       } catch (InstanceNotFoundException e) {
         responder.sendStatus(404);
@@ -233,9 +230,8 @@ public class AdminApp extends AbstractApplication {
       throws DatasetManagementException {
 
       Admin admin = getContext().getAdmin();
-      String namespace = getNamespace(request);
       try {
-        admin.dropDataset(namespace, dataset);
+        admin.dropDataset(dataset);
         responder.sendStatus(200);
       } catch (InstanceNotFoundException e) {
         responder.sendStatus(404);
