@@ -36,7 +36,8 @@ public interface StructuredTable {
    * The fields contain both the primary key and the rest of the columns to write.
    *
    * @param fields the fields to write
-   * @throws InvalidFieldException if any of the fields are not part of the table schema, or the types do not match.
+   * @throws InvalidFieldException if any of the fields are not part of the table schema, or the types of the value
+   *                               do not match
    */
   void write(Collection<Field<?>> fields) throws InvalidFieldException;
 
@@ -45,8 +46,9 @@ public interface StructuredTable {
    *
    * @param keys the primary key of the row to read
    * @return if the optional is not empty, the row addressed by the primary key.
-   * If the optional is empty then the row is missing in the table
-   * @throws InvalidFieldException if any of the keys are not part of the table schema, or the types do not match.
+   *         If the optional is empty then the row is missing in the table
+   * @throws InvalidFieldException if any of the keys are not part of the table schema, or the types of the value
+   *                               do not match.
    */
   Optional<StructuredRow> read(Collection<Field<?>> keys) throws InvalidFieldException;
 
@@ -56,7 +58,8 @@ public interface StructuredTable {
    * @param keys the primary key of the row to read
    * @param columns the columns to read. Empty collection returns all the columns
    * @return the row addressed by the primary key
-   * @throws InvalidFieldException if any of the keys are not part of the table schema, or the types do not match.
+   * @throws InvalidFieldException if any of the keys are not part of the table schema, or the types of the value
+   *                               do not match.
    */
   Optional<StructuredRow> read(Collection<Field<?>> keys, Collection<String> columns) throws InvalidFieldException;
 
@@ -67,7 +70,8 @@ public interface StructuredTable {
    * @param keyRange key range for the scan
    * @param limit maximum number of rows to return
    * @return a {@link CloseableIterator} of rows
-   * @throws InvalidFieldException if any of the keys are not part of the table schema, or the types do not match.
+   * @throws InvalidFieldException if any of the keys are not part of the table schema, or the types of the value
+   *                               do not match.
    */
   CloseableIterator<StructuredRow> scan(Range keyRange, int limit) throws InvalidFieldException;
 
@@ -75,7 +79,8 @@ public interface StructuredTable {
    * Delete a single row from the table.
    *
    * @param keys the primary key of the row to delete
-   * @throws InvalidFieldException if any of the keys are not part of the table schema, or the types do not match.
+   * @throws InvalidFieldException if any of the keys are not part of the table schema, or the types of the value
+   *                               do not match.
    */
   void delete(Collection<Field<?>> keys) throws InvalidFieldException;
 }

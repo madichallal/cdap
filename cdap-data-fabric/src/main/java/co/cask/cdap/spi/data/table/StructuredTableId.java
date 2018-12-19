@@ -27,17 +27,10 @@ public class StructuredTableId {
   private final String name;
 
   /**
-   * Convenience method to create the StructuredTableId.
-   *
    * @param name table name, the name can only contain alpha-numeric characters and underscore.
    *             The name has to start with an alphabet.
-   * @return the StructuredTableId for the given table name
    */
-  public static StructuredTableId of(String name) {
-    return new StructuredTableId(name);
-  }
-
-  private StructuredTableId(String name) {
+  public StructuredTableId(String name) {
     this.name = name;
   }
 
