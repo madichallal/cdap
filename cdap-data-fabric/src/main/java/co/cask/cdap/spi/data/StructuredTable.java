@@ -29,7 +29,7 @@ import java.util.Optional;
  * The schema of the table is fixed, and has to be specified in the
  * {@link StructuredTableSpecification} during the table creation.
  */
-// TODO: Add IOException for table operations if needed when implementing SQL tables.
+// TODO: CDAP-14676 - Add IOException for table operations if needed when implementing SQL tables.
 public interface StructuredTable {
   /**
    * Write the collection of fields to the table.
